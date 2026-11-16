@@ -29,6 +29,16 @@ export function pageVerses(corpus,pageId){
   if(!start)return [];
   return corpus.surahs.flatMap(s=>s.ayahs.filter(a=>(s.id>start.surah||s.id===start.surah&&a.n>=start.ayah)&&(!end||s.id<end.surah||s.id===end.surah&&a.n<end.ayah)).map(a=>({surah:s.id,ayah:a.n})));
 }
+// Tanzil stores the unnumbered opening basmala with the first verse of each
+// surah except Al-Fatihah and At-Tawbah. Split presentation only, at a space;
+// retaining both fragments reconstructs the exact original source string.
+export function verseDisplayParts(surah,ayah,text){
+  if(surah===1||surah===9||ayah!==1)return {basmala:'',body:text,start:0};
+  const match=text.match(/^(\S+\s+\S+\s+\S+\s+\S+\s+)([\s\S]*)$/);
+  const normalized=match?.[1].replace(/\p{Mark}/gu,'').replace(/ٱ/g,'ا').trim();
+  if(normalized!=='بسم الله الرحمن الرحيم')return {basmala:'',body:text,start:0};
+  return {basmala:match[1],body:match[2],start:match[1].length};
+}
 export function colorRuns(text,spans){
   if(!spans)return [{text,rule:null}];
   const chars=[...text],marks=chars.map(()=>null);

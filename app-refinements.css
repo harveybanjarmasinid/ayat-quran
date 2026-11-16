@@ -63,6 +63,16 @@ body #dialog #player .player-options .on{background:#ffffff20;color:#e7d899}
 .mode-ayah .ayah-foot .save-position{font-size:0;width:32px;justify-content:center;margin-left:auto}
 .mode-ayah .ayah-foot .save-position svg{width:15px;height:15px}
 .setting-row select{padding:8px 12px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink);font-size:13px}
+.surah-basmala{text-align:center;padding:16px 20px 10px;color:var(--ink)}
+.basmala-arabic{font:400 32px/1.8 QuranNaskh,Amiri,serif;letter-spacing:normal;word-break:normal;overflow-wrap:normal;margin:0;text-align:center}
+.basmala-latin{font-size:12px;font-style:italic;line-height:1.8;color:#8a612d;margin:7px 0 4px}
+.basmala-meaning{font-size:12px;line-height:1.8;color:var(--muted);margin:3px 0}
+.mode-page .mushaf-basmala{flex-shrink:0;padding:0;margin:3px 0 6px;text-align:center}
+.mode-page .basmala-arabic{font:400 39px/1.7 QuranNaskh,Amiri,serif}
+.mode-page .mushaf-surah{display:grid;grid-template-columns:1fr 3fr 1fr;align-items:center;gap:8px;padding:5px 10px}
+.mode-page .mushaf-surah>span{font:400 18px/1.5 Jakarta,Arial,sans-serif;color:#596847}
+.mode-page .mushaf-surah>strong{font:400 38px/1.5 QuranNaskh,Amiri,serif}
+.dark .mode-page .mushaf-surah>span{color:#c8cfb7}
 .mode-ayah .reader-header.surah-banner{display:grid;grid-template-columns:1fr 2fr 1fr;align-items:center;text-align:center;padding:12px 18px;margin:10px 12px 0;background:linear-gradient(110deg,#f5df9b,#fff2c9 48%,#edd393);border:1px solid #e8d69b;border-radius:5px;color:#65562d;gap:8px}
 .surah-banner>span{font-size:11px}
 .surah-banner>span:first-child{text-align:left}

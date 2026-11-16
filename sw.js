@@ -1,9 +1,10 @@
 const CACHE_PREFIX=`ayat-${encodeURIComponent(new URL(self.registration.scope).pathname)}-`;
-const CACHE=CACHE_PREFIX+'v8';
+const CACHE=CACHE_PREFIX+'v9';
 const SHELL=['./','./index.html','./style.css','./app.js','./core.js','./storage.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./fonts/AmiriQuran.ttf','./fonts/Jakarta.ttf','./data/quran.json','./data/indonesian.json','./licenses/Indonesian.txt','./licenses/Tanzil.txt','./licenses/Tajweed.txt','./licenses/Audio.txt','./licenses/amiriquran-OFL.txt','./licenses/plusjakartasans-OFL.txt'];
 SHELL.push('./reader.js','./reader.css','./fonts/ScheherazadeNew.ttf','./licenses/scheherazade-OFL.txt');
 SHELL.push('./page-viewer.js','./page-viewer.css');
 SHELL.push('./app-refinements.css','./data/reciters.json');
+SHELL.push('./mushaf.js','./mushaf.css','./mushaf/manifest.json','./install-guide.js','./install-guide.css','./guide/iphone-share.jpg','./guide/iphone-home-screen.jpg','./licenses/Quran-SVG-NOTICE.txt','./licenses/Quran-SVG-LICENSE.txt','./licenses/Quran-SVG-PROVENANCE.txt');
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith(CACHE_PREFIX)&&key!==CACHE)await caches.delete(key);await self.clients.claim();})());});
 self.addEventListener('fetch',event=>{

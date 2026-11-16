@@ -1,19 +1,19 @@
-// Fixed page coordinates preserve line breaks while zooming. No verse text is
-// changed; only the type size (once per page) and the outer transform change.
+// Publisher-derived outlines keep every line and verse in its printed position.
+import {mountMushafArtwork} from './mushaf.js';
 const PAGE_WIDTH=720,PAGE_HEIGHT=1080,MAX_ZOOM=4;
 let session={page:null,zoom:1,x:0,y:0,lastTap:0},cleanup=()=>{},focusVerse=()=>{};
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 export function disposePageViewer(){cleanup();cleanup=()=>{};focusVerse=()=>{}}
 export function followPageVerse(node){focusVerse(node)}
 
-export function mountPageViewer(page,onTurn){
+export function mountPageViewer(page,onTurn,onReady=()=>{}){
   const viewport=document.querySelector('.mushaf-viewport'),stage=document.querySelector('.mushaf-stage'),shell=document.querySelector('.mode-page');
   if(!viewport||!stage)return;
   viewport.dataset.page=String(page);
   if(session.page!==page)session={page,zoom:1,x:0,y:0,lastTap:0};
   const abort=new AbortController(),signal=abort.signal,pointers=new Map();
   let width=0,height=0,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false;
-  const text=stage.querySelector('.mushaf-text'),zoomBar=shell.querySelector('.page-zoom');
+  const host=stage.querySelector('.mushaf-artwork-host'),zoomBar=shell.querySelector('.page-zoom');
   function transform(){
     const scale=fit*session.zoom,limitX=Math.max(0,(PAGE_WIDTH*scale-width)/2),limitY=Math.max(0,(PAGE_HEIGHT*scale-height)/2);
     session.x=clamp(session.x,-limitX,limitX);session.y=clamp(session.y,-limitY,limitY);
@@ -30,11 +30,6 @@ export function mountPageViewer(page,onTurn){
     session.x=anchor.x-point.x*scale-(width-PAGE_WIDTH*scale)/2;session.y=anchor.y-point.y*scale-(height-PAGE_HEIGHT*scale)/2;
     transform();
   }
-  function fitType(){
-    let lo=12,hi=48;
-    for(let i=0;i<10;i++){const size=(lo+hi)/2;text.style.setProperty('--page-font',size+'px');if(text.scrollHeight<=text.clientHeight+1)lo=size;else hi=size;}
-    text.style.setProperty('--page-font',Math.floor(lo*10)/10+'px');
-  }
   function layout(){
     if(disposed)return;
     const oldFit=fit;width=viewport.clientWidth;height=viewport.clientHeight;
@@ -45,12 +40,21 @@ export function mountPageViewer(page,onTurn){
   }
   function schedule(){cancelAnimationFrame(frame);frame=requestAnimationFrame(layout)}
   const resize=new ResizeObserver(schedule);resize.observe(viewport);
-  document.fonts.ready.then(()=>{if(disposed)return;fitType();fontReady=true;layout();viewport.dataset.ready='true';});
+  mountMushafArtwork(host,page,{signal,onReady:()=>{if(disposed)return;fontReady=true;host.setAttribute('aria-busy','false');layout();viewport.dataset.ready='true';onReady();},onError:error=>{
+    host.setAttribute('aria-busy','false');viewport.dataset.error='true';
+    const box=document.createElement('div');box.className='mushaf-error';
+    const title=document.createElement('strong');title.textContent=navigator.onLine?'Halaman belum dapat dibuka':'Halaman ini belum tersimpan';
+    const message=document.createElement('p');message.textContent=navigator.onLine?error.message:'Sambungkan internet untuk membuka lembar ini, atau lanjutkan membaca di mode Per Ayat.';
+    const retry=document.createElement('button');retry.className='primary';retry.dataset.action='mushaf-retry';retry.textContent='Coba lagi';
+    const fallback=document.createElement('button');fallback.className='pill';fallback.dataset.action='reading-mode';fallback.dataset.mode='ayah';fallback.textContent='Baca Per Ayat';
+    box.append(title,message,retry,fallback);host.replaceChildren(box);
+  }});
   layout();window.addEventListener('resize',schedule,{signal});window.visualViewport?.addEventListener('resize',schedule,{signal});
   zoomBar.addEventListener('click',e=>{const action=e.target.closest('[data-zoom]')?.dataset.zoom;if(action)setZoom(action==='reset'?1:session.zoom+(action==='in'?.5:-.5));},{signal});
   const local=e=>{const r=viewport.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
   const pinchInfo=()=>{const [a,b]=[...pointers.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.hypot(a.x-b.x,a.y-b.y)}};
   viewport.addEventListener('pointerdown',e=>{
+    if(e.target.closest('.mushaf-error'))return;
     clearTimeout(tapTimer);
     if(e.pointerType==='mouse'&&e.button!==0)return;
     const point=local(e);pointers.set(e.pointerId,point);e.target.setPointerCapture(e.pointerId);

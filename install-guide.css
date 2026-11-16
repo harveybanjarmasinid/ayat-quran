@@ -1,0 +1,20 @@
+dialog[data-panel=install]{width:min(540px,calc(100vw - 20px));max-width:540px;max-height:92dvh;padding:22px;overflow-y:auto}
+.guide-intro,.guide-step-copy{font-size:13px;line-height:1.8;color:var(--muted);margin:8px 0 15px}
+.guide-tabs{display:flex;gap:4px;background:var(--soft);border-radius:9px;padding:4px;margin:15px 0 20px}
+.guide-tabs button{flex:1;min-height:42px;border-radius:6px;color:var(--muted);font-size:13px}
+.guide-tabs button[aria-selected=true]{background:var(--surface);color:var(--green);font-weight:700;box-shadow:0 1px 3px #12331b14}
+.guide-step-title{display:flex;align-items:center;gap:10px}.guide-step-title>span{display:grid;place-items:center;width:28px;height:28px;flex-shrink:0;border-radius:50%;background:var(--green);color:white;font-size:12px}.guide-step-title h3{margin:0;font-size:15px;line-height:1.6}
+.guide-step-copy strong{color:var(--ink)}.guide-figure{margin:14px 0 9px}.guide-figure figcaption{font-size:10px;line-height:1.6;color:var(--muted);margin:7px 0}
+.guide-crop{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:#303a35;width:100%}
+.guide-crop--share{aspect-ratio:739/520}.guide-crop--home{aspect-ratio:739/720}
+.guide-crop img{position:absolute;left:0;width:100%;max-width:none;height:auto;display:block}
+.guide-crop--share img{top:-207.6923%}.guide-crop--home img{top:-41.6667%}
+.guide-crop>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;stroke:none;stroke-width:0}
+.guide-illustration{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:14px;stroke:none;stroke-width:0}
+.guide-controls{position:sticky;bottom:-22px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 0;margin:0 0 12px;border-top:1px solid var(--line);z-index:1}
+.guide-controls button{font-size:12px;min-height:42px;padding:9px 13px}.guide-controls>span{font-size:11px;color:var(--muted)}
+.guide-help{border:1px solid var(--line);border-radius:9px;padding:12px;font-size:12px;line-height:1.8;margin:14px 0}.guide-help summary{cursor:pointer;font-weight:600;color:var(--green)}
+.guide-offline{padding:13px;background:var(--soft);border-radius:9px;font-size:12px;line-height:1.8}.guide-offline p{margin:4px 0;color:var(--muted)}
+.guide-source,.guide-url{font-size:10px;color:var(--muted);line-height:1.8;overflow-wrap:anywhere}.guide-source a,.guide-url a{text-decoration:underline}.guide-installed{font-size:12px;color:var(--green);background:var(--soft);padding:12px;border-radius:8px}
+.guide-native-install{width:100%;justify-content:center;font-size:13px;margin-bottom:12px}
+@media(max-width:500px){dialog[data-panel=install]{padding:18px}.guide-controls{bottom:-18px}.guide-figure{max-width:390px;margin-inline:auto}}

@@ -16,6 +16,11 @@
 .dark .reader-nav-tabs button[aria-selected=true]>small{background:#ffffff19;color:#f0f4e9}
 .reader-strip{display:flex;gap:3px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:0 10px;max-width:100%;touch-action:pan-x pan-y}
 .reader-strip[hidden]{display:none}.reader-strip::-webkit-scrollbar{display:none}
+.reader-rail-row{display:flex;align-items:center;gap:5px;min-width:0;padding-right:10px}
+.reader-rail-row .reader-strip{flex:1;min-width:0}
+.reader-play-context{display:flex;align-items:center;justify-content:center;flex:0 0 auto;gap:5px;min-height:36px;min-width:96px;padding:6px 10px;border-radius:9px;background:var(--soft);color:var(--green);font:600 10px/1.4 Jakarta,Arial,sans-serif;white-space:nowrap}
+.reader-play-context>svg{width:14px;height:14px}
+.reader-play-context.is-playing{background:var(--green);color:var(--surface)}
 .reader-strip button{flex:0 0 auto;min-height:44px;padding:8px 16px;border-bottom:3px solid transparent;white-space:nowrap;font:400 12px/1.5 Jakarta,Arial,sans-serif;color:var(--muted)}
 .reader-strip button[aria-current]{font-weight:700;color:#7f682e;border-color:#c9b987}
 .reader-strip button:hover{color:var(--green)}

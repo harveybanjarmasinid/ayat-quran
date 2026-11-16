@@ -58,3 +58,19 @@ export function colorRuns(text,spans){
 export function bytesLabel(n){return n>=1e9?`${(n/1e9).toFixed(2)} GB`:`${(n/1e6).toFixed(1)} MB`;}
 export function timeLabel(n){n=Math.max(0,Math.floor(n||0));return `${Math.floor(n/60)}:${String(n%60).padStart(2,'0')}`;}
 export function isValidPosition(p,surahs){const s=surahs.find(s=>s.id===p?.surah);return Boolean(s&&Number.isInteger(p.ayah)&&p.ayah>=1&&p.ayah<=s.count);}
+// Inclusive listening range, independent of page boundaries and display mode.
+export function audioRange(data,kind,id){
+  if(kind==='surah'){
+    const s=data.surahs.find(s=>s.id===id);if(!s)return null;
+    return {kind,id,start:{surah:id,ayah:1},end:{surah:id,ayah:s.count}};
+  }
+  if(kind!=='juz')return null;
+  const start=data.juzs.find(j=>j.id===id);if(!start)return null;
+  const next=data.juzs.find(j=>j.id===id+1),last=data.surahs.at(-1);
+  const end=!next?{surah:last.id,ayah:last.count}:next.ayah>1?{surah:next.surah,ayah:next.ayah-1}:{surah:next.surah-1,ayah:data.surahs.find(s=>s.id===next.surah-1).count};
+  return {kind,id,start:{surah:start.surah,ayah:start.ayah},end};
+}
+export function inAudioRange(range,surah,ayah){
+  const key=surah*1000+ayah;
+  return !range||(key>=range.start.surah*1000+range.start.ayah&&key<=range.end.surah*1000+range.end.ayah);
+}

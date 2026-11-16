@@ -1,4 +1,13 @@
 /* Put the library first, with a compact entry back into the user's reading. */
+.mode-ayah .ayah-buttons button.is-playing{background:var(--green);color:var(--surface);border-radius:9px}
+.audio-button-spinner{display:inline-block;flex-shrink:0;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:audio-spin .8s linear infinite}
+[data-action="play-ayah"].is-loading,[data-action="play-scope"].is-loading{opacity:.7;cursor:wait}
+.audio-scope-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.audio-scope-options button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;border:1px solid var(--line);border-radius:10px;padding:9px;color:var(--green);font-size:11px}
+.audio-scope-options button.is-playing{background:var(--soft)}
+.audio-scope-options svg{width:17px;height:17px;flex-shrink:0}
+@keyframes audio-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.audio-button-spinner{animation:none;border-style:dotted}}
 .home-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}
 .home-heading h1{font-size:27px;font-weight:650;letter-spacing:-.6px;margin:0}
 .home-heading p{font-size:11px;color:var(--muted);margin:2px 0 0}

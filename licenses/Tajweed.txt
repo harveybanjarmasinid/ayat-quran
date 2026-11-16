@@ -1,0 +1,5 @@
+Tajweed annotations by Collin Fair (cpfair/quran-tajweed).
+https://github.com/cpfair/quran-tajweed
+CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
+Bundled annotations are filtered to exact matches with Tanzil 1.1; positions and rules are not rewritten.
+Tajweed is experimental and has not been independently reviewed.

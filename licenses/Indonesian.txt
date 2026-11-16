@@ -1,0 +1,8 @@
+Bacaan latin dan nama surah dari EQuran.id. Dokumentasi penyedia mencantumkan Kementerian Agama RI sebagai sumber data. Digunakan untuk prototipe pribadi/edukasi; atribusi wajib; data tidak boleh dijual. Bacaan latin adalah bantuan, bukan pengganti teks Arab dan bimbingan pelafalan.
+
+API: https://equran.id/api/v2/surat/{id}
+Documentation: https://equran.id/apidev/v2
+Terms: https://equran.id/terms
+Retrieved: 2026-11-16T03:58:12.718Z
+
+Selected fields: namaLatin, arti, teksLatin, nomor, nomorAyat. Latin strings retained verbatim; data format changed to map chapter and verse numbers. No independent pronunciation certification is claimed.

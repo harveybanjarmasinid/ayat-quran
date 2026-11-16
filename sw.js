@@ -1,0 +1,14 @@
+const CACHE_PREFIX=`ayat-${encodeURIComponent(new URL(self.registration.scope).pathname)}-`;
+const CACHE=CACHE_PREFIX+'v4';
+const SHELL=['./','./index.html','./style.css','./app.js','./core.js','./storage.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./fonts/AmiriQuran.ttf','./fonts/Jakarta.ttf','./data/quran.json','./data/indonesian.json','./licenses/Indonesian.txt','./licenses/Tanzil.txt','./licenses/Tajweed.txt','./licenses/Audio.txt','./licenses/amiriquran-OFL.txt','./licenses/plusjakartasans-OFL.txt'];
+self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)));});
+self.addEventListener('activate',event=>{event.waitUntil((async()=>{for(const key of await caches.keys())if(key.startsWith(CACHE_PREFIX)&&key!==CACHE)await caches.delete(key);await self.clients.claim();})());});
+self.addEventListener('fetch',event=>{
+  const u=new URL(event.request.url);
+  if(event.request.method!=='GET'||u.origin!==self.location.origin)return;
+  event.respondWith((async()=>{
+    const cache=await caches.open(CACHE),stored=await cache.match(event.request,{ignoreSearch:true});
+    if(stored)return stored;
+    try{return await fetch(event.request);}catch{if(event.request.mode==='navigate')return await cache.match('./index.html');return Response.error();}
+  })());
+});

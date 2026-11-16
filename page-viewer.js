@@ -1,9 +1,9 @@
 // Publisher-derived outlines keep every line and verse in its printed position.
 import {mountMushafArtwork} from './mushaf.js';
 const PAGE_WIDTH=720,PAGE_HEIGHT=1080,MAX_ZOOM=4;
-let session={page:null,zoom:1,x:0,y:0,lastTap:0},cleanup=()=>{},focusVerse=()=>{};
+let session={page:null,zoom:1,x:0,y:0,lastTap:0},clearDisplay=false,cleanup=()=>{},focusVerse=()=>{};
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-export function disposePageViewer(){cleanup();cleanup=()=>{};focusVerse=()=>{}}
+export function disposePageViewer(){cleanup();cleanup=()=>{};focusVerse=()=>{};document.body.classList.remove('page-clear');}
 export function followPageVerse(node){focusVerse(node)}
 
 export function mountPageViewer(page,onTurn,onReady=()=>{}){
@@ -12,28 +12,39 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
   viewport.dataset.page=String(page);
   if(session.page!==page)session={page,zoom:1,x:0,y:0,lastTap:0};
   const abort=new AbortController(),signal=abort.signal,pointers=new Map();
-  let width=0,height=0,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false;
+  let width=0,height=0,pageHeight=PAGE_HEIGHT,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false;
   const host=stage.querySelector('.mushaf-artwork-host'),zoomBar=shell.querySelector('.page-zoom');
+  const focusEnter=shell.querySelector('[data-page-focus="enter"]'),focusExit=shell.querySelector('[data-page-focus="exit"]');
+  function syncClearDisplay(){document.body.classList.toggle('page-clear',clearDisplay);focusExit.hidden=!clearDisplay;}
+  function setClearDisplay(value){clearDisplay=value;session.zoom=1;session.x=0;session.y=0;session.lastTap=0;syncClearDisplay();layout();(value?focusExit:focusEnter).focus({preventScroll:true});}
+  syncClearDisplay();
+  focusEnter.addEventListener('click',()=>setClearDisplay(true),{signal});
+  focusExit.addEventListener('click',()=>setClearDisplay(false),{signal});
+  window.addEventListener('keydown',e=>{if(e.key==='Escape'&&clearDisplay&&!document.querySelector('dialog[open]')){e.preventDefault();setClearDisplay(false);}},{signal});
   function transform(){
-    const scale=fit*session.zoom,limitX=Math.max(0,(PAGE_WIDTH*scale-width)/2),limitY=Math.max(0,(PAGE_HEIGHT*scale-height)/2);
+    const scale=fit*session.zoom,limitX=Math.max(0,(PAGE_WIDTH*scale-width)/2),limitY=Math.max(0,(pageHeight*scale-height)/2);
     session.x=clamp(session.x,-limitX,limitX);session.y=clamp(session.y,-limitY,limitY);
-    stage.style.transform=`translate(${(width-PAGE_WIDTH*scale)/2+session.x}px, ${(height-PAGE_HEIGHT*scale)/2+session.y}px) scale(${scale})`;
+    stage.style.transform=`translate(${(width-PAGE_WIDTH*scale)/2+session.x}px, ${(height-pageHeight*scale)/2+session.y}px) scale(${scale})`;
     viewport.dataset.zoom=session.zoom.toFixed(3);viewport.classList.toggle('zoomed',session.zoom>1.01);
     zoomBar.querySelector('[data-zoom="reset"]').textContent=session.zoom<=1.01?'Pas layar':Math.round(session.zoom*100)+'%';
     zoomBar.querySelector('[data-zoom="out"]').disabled=session.zoom<=1.01;
     zoomBar.querySelector('[data-zoom="in"]').disabled=session.zoom>=MAX_ZOOM;
   }
   function setZoom(value,anchor={x:width/2,y:height/2}){
-    const old=fit*session.zoom,tx=(width-PAGE_WIDTH*old)/2+session.x,ty=(height-PAGE_HEIGHT*old)/2+session.y;
+    const old=fit*session.zoom,tx=(width-PAGE_WIDTH*old)/2+session.x,ty=(height-pageHeight*old)/2+session.y;
     const point={x:(anchor.x-tx)/old,y:(anchor.y-ty)/old};
     session.zoom=clamp(value,1,MAX_ZOOM);const scale=fit*session.zoom;
-    session.x=anchor.x-point.x*scale-(width-PAGE_WIDTH*scale)/2;session.y=anchor.y-point.y*scale-(height-PAGE_HEIGHT*scale)/2;
+    session.x=anchor.x-point.x*scale-(width-PAGE_WIDTH*scale)/2;session.y=anchor.y-point.y*scale-(height-pageHeight*scale)/2;
     transform();
   }
   function layout(){
     if(disposed)return;
+    // Keep the original artwork intact; remove only the app's frame and labels.
+    const box=host.querySelector('.mushaf-artwork')?.viewBox.baseVal,gap=clearDisplay?8:20;
+    pageHeight=clearDisplay&&box?.width&&box?.height?PAGE_WIDTH*box.height/box.width:PAGE_HEIGHT;
+    shell.style.setProperty('--mushaf-height',pageHeight+'px');
     const oldFit=fit;width=viewport.clientWidth;height=viewport.clientHeight;
-    fit=Math.max(.01,Math.min((width-20)/PAGE_WIDTH,(height-20)/PAGE_HEIGHT));
+    fit=Math.max(.01,Math.min((width-gap)/PAGE_WIDTH,(height-gap)/pageHeight));
     if(oldFit&&fontReady){session.x*=fit/oldFit;session.y*=fit/oldFit;}
     transform();
     viewport.dataset.size=width+'x'+height;

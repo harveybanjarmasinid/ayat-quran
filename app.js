@@ -13,7 +13,7 @@ const el=id=>document.getElementById(id), main=el('main'),audio=el('audio'),play
 const oldState=readState();
 let state={lastRead:oldState.lastRead||null,bookmarks:Array.isArray(oldState.bookmarks)?oldState.bookmarks:[],settings:{fontSize:34,dark:false,tajweed:false,latin:true,translation:true,readingMode:'ayah',reciter:123,...oldState.settings}};
 state.settings.fontSize=Math.min(48,Math.max(24,Number(state.settings.fontSize)||34));
-let readerNavigationTab='juz';
+let readerNavigationTab='juz',selectedPageAyah=null;
 let data,reciters=[],surahs=[],downloaded=new Set(),view='home',tab='juz',search='',deferredInstall,offlineReady=false;
 const downloads=new Map();let batch=false,batchAbort=false,toastTimer;
 let player=null,playSeq=0,currentObjectURL=null,currentSource=null;
@@ -33,7 +33,7 @@ function toast(message){el('toast').textContent=message;el('toast').classList.ad
 function persist(){try{writeState(state);return true}catch{toast('Penyimpanan penuh atau tidak tersedia. Perubahan belum tersimpan.');return false}}
 function applySettings(){document.body.classList.toggle('dark',Boolean(state.settings.dark));document.documentElement.style.setProperty('--arabic-size',state.settings.fontSize+'px')}
 function setConnection(){const n=el('connection');n.classList.toggle('pending',!offlineReady);n.innerHTML=`<i></i>${offlineReady?(navigator.onLine?'Teks siap offline':'Mode offline'):(navigator.onLine?'Menyiapkan offline':'Teks belum tersimpan')}`;}
-function navigate(hash){if(location.hash===hash)render();else location.hash=hash;}
+function navigate(hash){selectedPageAyah=null;if(location.hash===hash)render();else location.hash=hash;}
 function currentRoute(){const r=parseRoute(location.hash,surahs,data?.pages);if(r&&!r.page&&state.settings.readingMode==='page')r.page=pageForPosition(data.pages,r.surah,r.ayah);return r;}
 function goRead(id,ayah=1){navigate(state.settings.readingMode==='page'?'#page/'+pageForPosition(data.pages,id,ayah)+'/'+id+'/'+ayah:'#read/'+id+'/'+ayah)}
 function goPage(page){if(page>=1&&page<=604){state.settings.readingMode='page';persist();navigate('#page/'+page);scrollTo(0,0);}}
@@ -64,8 +64,9 @@ function renderReader(route){
   syncAudioPanel();
   paintTajweed(surahs,state.settings.tajweed);
   if(route.page)mountPageViewer(route.page,goPage,()=>{
-    document.querySelectorAll('.page-ayah').forEach(n=>{const id=Number(n.dataset.surah),ayah=Number(n.dataset.ayah);n.classList.toggle('selected',route.surah===id&&route.ayah===ayah);n.classList.toggle('saved',state.lastRead?.surah===id&&state.lastRead.ayah===ayah);n.setAttribute('aria-pressed',String(route.surah===id&&route.ayah===ayah));n.setAttribute('aria-label',sBy(id).name+', ayat '+ayah);});markPlaying();
+    document.querySelectorAll('.page-ayah').forEach(n=>{const id=Number(n.dataset.surah),ayah=Number(n.dataset.ayah),selected=selectedPageAyah?.page===route.page&&selectedPageAyah.surah===id&&selectedPageAyah.ayah===ayah;n.classList.toggle('selected',selected);n.classList.toggle('saved',state.lastRead?.surah===id&&state.lastRead.ayah===ayah);n.setAttribute('aria-pressed',String(selected));n.setAttribute('aria-label',sBy(id).name+', ayat '+ayah+'. Ketuk untuk dengarkan atau tandai.');});markPlaying();
   });
+  else markPlaying();
   const token=location.hash;
   if(!route.page&&route.ayah>1)document.fonts.ready.then(()=>requestAnimationFrame(()=>{if(location.hash===token)el('ayah-'+route.ayah)?.scrollIntoView({block:'start',behavior:'instant'});}));
 
@@ -91,7 +92,7 @@ async function downloadSurah(id,reciter=state.settings.reciter){const key=downlo
   if(loaded!==size)throw Error('Unduhan belum lengkap. Coba lagi.');const blob=new Blob(chunks,{type:'audio/mpeg'});await saveAudio({id,blob,bytes:blob.size,savedAt:Date.now()},reciter);if(reciter===state.settings.reciter)downloaded.add(id);toast(s.name+' · '+q.name+' siap offline.');return true;
 }catch(e){toast(e.name==='AbortError'?'Unduhan dibatalkan.':e.name==='QuotaExceededError'?'Penyimpanan penuh. Hapus beberapa unduhan.':e.message||'Unduhan gagal.');return false;}finally{downloads.delete(key);refreshDownloadUI();}}
 async function downloadAll(){if(batch)return;const reciter=state.settings.reciter,existing=new Set(await listAudio(reciter));batch=true;batchAbort=false;refreshDownloadUI();for(const s of surahs){if(batchAbort)break;if(!existing.has(s.id)&&!await downloadSurah(s.id,reciter))break;}batch=false;refreshDownloadUI();}
-function markPlaying(){document.querySelectorAll('.ayah.active,.page-ayah.active').forEach(n=>n.classList.remove('active'));if(player)document.querySelectorAll('.ayah[data-surah="'+player.surah+'"][data-ayah="'+player.ayah+'"],.page-ayah[data-surah="'+player.surah+'"][data-ayah="'+player.ayah+'"]').forEach(n=>n.classList.add('active'));}
+function markPlaying(){document.querySelectorAll('.ayah.active,.page-ayah.active').forEach(n=>n.classList.remove('active'));if(player&&!audio.paused&&!audio.ended&&!player.loading&&!player.error)document.querySelectorAll('.ayah[data-surah="'+player.surah+'"][data-ayah="'+player.ayah+'"],.page-ayah[data-surah="'+player.surah+'"][data-ayah="'+player.ayah+'"]').forEach(n=>n.classList.add('active'));}
 function followAudio(){const route=currentRoute();if(!route||!player)return;if(route.page){const page=pageForPosition(data.pages,player.surah,player.ayah);if(page!==route.page)navigate('#page/'+page+'/'+player.surah+'/'+player.ayah);else followPageVerse(document.querySelector('.page-ayah.active'));}else if(route.surah===player.surah)el('ayah-'+player.ayah)?.scrollIntoView({behavior:'smooth',block:'nearest'});}
 function renderPlayer(){syncAudioPanel();if(!player){playerEl.hidden=true;document.body.classList.remove('has-player');return;}const s=sBy(player.surah);playerEl.hidden=false;document.body.classList.add('has-player');playerEl.innerHTML=`<a class="player-info" href="#read/${s.id}/${player.ayah}"><span class="player-disc">${icon('headphones')}</span><span><strong>${esc(s.name)} · Ayat ${player.ayah}</strong><small>${player.loading?'Menyiapkan audio…':esc(reciterBy(player.reciter).name)}${downloaded.has(s.id)?' · Offline':''}</small></span></a><div class="player-controls"><button data-action="previous" aria-label="Ayat sebelumnya">${icon('previous')}</button><button class="play-main" data-action="toggle-play" aria-label="${audio.paused?'Putar':'Jeda'}">${icon(audio.paused?'play':'pause')}</button><button data-action="next" aria-label="Ayat berikutnya">${icon('next')}</button></div><div class="player-timeline"><span id="player-time">0:00</span><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Posisi audio ayat"><span id="player-length">0:00</span></div><div class="player-options"><button class="speed" data-action="speed" aria-label="Kecepatan audio">${audio.playbackRate}×</button><button class="repeat ${player.repeat?'on':''}" data-action="repeat" aria-label="Ulangi ayat" aria-pressed="${player.repeat}">${icon('repeat')}</button><button class="${player.continuous?'on':''}" data-action="continuous" aria-label="Putar ayat berurutan" aria-pressed="${player.continuous}">${icon('list')}</button><button data-action="close-player" aria-label="Tutup pemutar">${icon('close')}</button></div>`;updateTimeline();markPlaying();}
 function updateTimeline(){if(!player||!el('seek'))return;const [from,to]=audioTiming(player.surah,player.ayah);const at=Math.max(0,Math.min(to-from,audio.currentTime*1000-from));el('seek').value=String(at/(to-from)*1000);el('player-time').textContent=timeLabel(at/1000);el('player-length').textContent=timeLabel((to-from)/1000);}
@@ -125,7 +126,8 @@ document.addEventListener('click',async event=>{
     case'mushaf-downloads':dialog.close();navigate('#downloads');break;
     case'page-picker':{const r=currentRoute();dialogOpen('Buka halaman',`<form id="page-picker-form"><label for="page-number">Nomor halaman (1–604)</label><input id="page-number" type="number" min="1" max="604" step="1" required inputmode="numeric" value="${r.page}" autofocus><button class="primary" type="submit">Buka halaman</button></form><p class="dialog-copy">Geser halaman ke kiri untuk melanjutkan, atau ke kanan untuk kembali.</p>`);break;}
     case'page-turn':goPage(Number(b.dataset.page));break;
-    case'select-ayah':{const y=scrollY;history.replaceState(null,'','#page/'+currentRoute().page+'/'+id+'/'+n);render();scrollTo(0,y);showAyahActions(id,n);break;}
+    case'select-ayah':{const y=scrollY,page=currentRoute().page;selectedPageAyah={page,surah:id,ayah:n};history.replaceState(null,'','#page/'+page+'/'+id+'/'+n);render();scrollTo(0,y);showAyahActions(id,n);break;}
+    case'dismiss-page-hint':state.settings.pageAudioHintDismissed=true;persist();b.closest('.page-audio-hint')?.remove();break;
     case'play-sequence':playAyah(id,n,true);break;
     case'translation':{const y=scrollY;state.settings.translation=!state.settings.translation;persist();render();scrollTo(0,y);if(dialog.open)showSettings();break;}
     case'continue':goRead(state.lastRead?.surah||1,state.lastRead?.ayah||1);break;
@@ -158,7 +160,7 @@ document.addEventListener('change',async e=>{if(e.target.matches('.reciter-selec
 document.addEventListener('keydown',e=>{if(e.target.matches('[data-action=reader-tab]')&&['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const kind=e.key==='Home'?'juz':e.key==='End'?'surah':readerNavigationTab==='juz'?'surah':'juz';selectReaderNavigation(kind);document.getElementById('reader-'+kind+'-tab').focus();return;}if((e.key==='Enter'||e.key===' ')&&e.target.matches('.page-ayah')){e.preventDefault();e.target.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:0}));}});
 dialog.addEventListener('close',()=>{if(playerEl.parentElement!==document.body)document.body.append(playerEl);dialog.dataset.panel='';});
 dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
-window.addEventListener('hashchange',()=>{render();const r=currentRoute();if(!r||r.page||r.ayah===1)scrollTo(0,0);});
+window.addEventListener('hashchange',()=>{selectedPageAyah=null;render();const r=currentRoute();if(!r||r.page||r.ayah===1)scrollTo(0,0);});
 window.addEventListener('online',setConnection);window.addEventListener('offline',setConnection);
 window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredInstall=e;});
 async function setupOffline(){if(!('serviceWorker'in navigator)||!window.isSecureContext){setConnection();return;}try{

@@ -27,6 +27,11 @@ body.page-reading .workspace,body.page-reading main{height:100%;min-height:0}
 .page-zoom button{height:40px;min-width:44px;font-size:22px;padding:3px 12px;border-radius:24px;touch-action:manipulation}
 .page-zoom [data-zoom=reset]{font-size:11px;min-width:78px}
 .page-zoom button:hover{background:#829a6d15}
+.page-audio-hint{display:flex;flex:0 0 auto;align-self:center;align-items:center;gap:6px;max-width:100%;padding:0 6px;color:var(--muted);font-size:11px;line-height:1.5}
+.page-audio-hint>svg{width:14px;height:14px;flex-shrink:0;color:var(--green)}
+.page-audio-hint button{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;padding:7px;border-radius:50%;color:var(--muted)}
+.page-audio-hint button svg{width:13px;height:13px}
+.page-audio-hint button:hover{background:var(--soft);color:var(--green)}
 body.page-reading .mode-page .page-selection{position:static;flex:0 0 auto;max-width:none;width:100%;margin:0;padding:7px 15px;min-height:52px;box-shadow:none;border-bottom:0;gap:6px}
 .mode-page .page-selection>div:first-child{font-size:11px;line-height:1.5}
 .mode-page .page-selection small{font-size:9px;margin:0}

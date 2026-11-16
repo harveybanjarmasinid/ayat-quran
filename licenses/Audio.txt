@@ -1,6 +1,6 @@
-Recitation: Mishary Rashid Alafasy, Hafs an Asim.
-Audio and timings: MP3Quran.net, recording 123.
+Recitations (Hafs an Asim): Mishary Rashid Alafasy (recording 123); Saad Al-Ghamdi (recording 30).
+Audio and verse timing: MP3Quran.net.
 https://mp3quran.net/eng/privacy
-https://www.mp3quran.net/eng/contact-us
-MP3Quran publishes permission for visitors and developers to copy site materials. This is the provider permission; no separate reciter-specific rights agreement is held by this prototype.
-Recordings are downloaded only at the user's request.
+Provider permits visitors/developers to copy materials and use links. No separate reciter-specific rights agreement is held by this prototype.
+114 recordings and 6,236 ordered verse timings checked for each included reciter; audible boundaries have not all been independently reviewed.
+Audio streams from the provider and is downloaded locally only on user request.

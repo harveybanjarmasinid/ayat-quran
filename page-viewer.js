@@ -12,7 +12,7 @@ export function mountPageViewer(page,onTurn){
   viewport.dataset.page=String(page);
   if(session.page!==page)session={page,zoom:1,x:0,y:0,lastTap:0};
   const abort=new AbortController(),signal=abort.signal,pointers=new Map();
-  let width=0,height=0,fit=1,frame=0,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false;
+  let width=0,height=0,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false;
   const text=stage.querySelector('.mushaf-text'),zoomBar=shell.querySelector('.page-zoom');
   function transform(){
     const scale=fit*session.zoom,limitX=Math.max(0,(PAGE_WIDTH*scale-width)/2),limitY=Math.max(0,(PAGE_HEIGHT*scale-height)/2);
@@ -37,9 +37,6 @@ export function mountPageViewer(page,onTurn){
   }
   function layout(){
     if(disposed)return;
-    const dock=document.body.classList.contains('has-player')?document.getElementById('player'):shell.querySelector('.reader-audio-idle');
-    const dockHeight=dock?.getBoundingClientRect().height||78;
-    if(shell.style.getPropertyValue('--page-dock-height')!==dockHeight+'px')shell.style.setProperty('--page-dock-height',dockHeight+'px');
     const oldFit=fit;width=viewport.clientWidth;height=viewport.clientHeight;
     fit=Math.max(.01,Math.min((width-20)/PAGE_WIDTH,(height-20)/PAGE_HEIGHT));
     if(oldFit&&fontReady){session.x*=fit/oldFit;session.y*=fit/oldFit;}
@@ -47,13 +44,14 @@ export function mountPageViewer(page,onTurn){
     viewport.dataset.size=width+'x'+height;
   }
   function schedule(){cancelAnimationFrame(frame);frame=requestAnimationFrame(layout)}
-  const resize=new ResizeObserver(schedule);resize.observe(viewport);resize.observe(document.getElementById('player'));resize.observe(shell.querySelector('.reader-audio-idle'));
+  const resize=new ResizeObserver(schedule);resize.observe(viewport);
   document.fonts.ready.then(()=>{if(disposed)return;fitType();fontReady=true;layout();viewport.dataset.ready='true';});
   layout();window.addEventListener('resize',schedule,{signal});window.visualViewport?.addEventListener('resize',schedule,{signal});
   zoomBar.addEventListener('click',e=>{const action=e.target.closest('[data-zoom]')?.dataset.zoom;if(action)setZoom(action==='reset'?1:session.zoom+(action==='in'?.5:-.5));},{signal});
   const local=e=>{const r=viewport.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
   const pinchInfo=()=>{const [a,b]=[...pointers.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.hypot(a.x-b.x,a.y-b.y)}};
   viewport.addEventListener('pointerdown',e=>{
+    clearTimeout(tapTimer);
     if(e.pointerType==='mouse'&&e.button!==0)return;
     const point=local(e);pointers.set(e.pointerId,point);e.target.setPointerCapture(e.pointerId);
     if(pointers.size===1)gesture={start:point,previous:point,moved:false,multiple:false,zoom:session.zoom};
@@ -81,7 +79,7 @@ export function mountPageViewer(page,onTurn){
     gesture=null;pinch=null;
   }
   viewport.addEventListener('pointerup',pointerEnd,{signal});viewport.addEventListener('pointercancel',pointerEnd,{signal});
-  viewport.addEventListener('click',e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();}},{capture:true,signal});
+  viewport.addEventListener('click',e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();return;}const verse=e.target.closest('.page-ayah');if(verse&&e.detail>0){e.preventDefault();e.stopImmediatePropagation();clearTimeout(tapTimer);tapTimer=setTimeout(()=>{if(!disposed&&verse.isConnected)verse.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:0}));},310);}},{capture:true,signal});
   viewport.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();setZoom(session.zoom*Math.exp(-e.deltaY*.005),local(e));}else if(session.zoom>1.01){e.preventDefault();session.x-=e.deltaX;session.y-=e.deltaY;transform();}},{passive:false,signal});
   viewport.addEventListener('keydown',e=>{
     if(['+','=','-','0','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();
@@ -92,5 +90,5 @@ export function mountPageViewer(page,onTurn){
   },{signal});
   // In zoom mode, following audio pans the page instead of scrolling the body.
   focusVerse=node=>{if(!node||session.zoom<=1.01)return;const r=node.getBoundingClientRect(),v=viewport.getBoundingClientRect();if(r.top<v.top||r.bottom>v.bottom){session.y+=v.top+height/2-(r.top+r.bottom)/2;transform();}};
-  cleanup=()=>{disposed=true;abort.abort();resize.disconnect();cancelAnimationFrame(frame)};
+  cleanup=()=>{disposed=true;abort.abort();resize.disconnect();cancelAnimationFrame(frame);clearTimeout(tapTimer)};
 }

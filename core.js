@@ -1,5 +1,5 @@
 export const AUDIO_BASE='https://cdn.mp3quran.net/audio/mishary-alafasy/r1/';
-export const audioURL=id=>`${AUDIO_BASE}${String(id).padStart(3,'0')}.mp3`;
+export const audioURL=(id,base=AUDIO_BASE)=>`${base}${String(id).padStart(3,'0')}.mp3`;
 export function normalizeSearch(value){
   return String(value).normalize('NFD').replace(/[\u064b-\u065f\u0670\u0300-\u036f]/g,'').replace(/[أإآٱ]/g,'ا').replace(/[\s'’\-]/g,'').toLowerCase();
 }

@@ -2,14 +2,18 @@
    the sheet, never the Arabic text or its line wrapping. */
 body.page-reading,body.page-reading.has-player{height:100vh;height:100dvh;overflow:hidden;padding:0;overscroll-behavior:none}
 body.page-reading .workspace,body.page-reading main{height:100%;min-height:0}
-.reader-shell.mode-page{position:relative;display:flex;flex-direction:column;height:100vh;height:100dvh;padding:0;overflow:hidden;--page-dock-height:78px}
+.reader-shell.mode-page{position:relative;display:flex;flex-direction:column;height:100vh;height:100dvh;padding:0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);overflow:hidden;--page-dock-height:78px}
 .mode-page .reader-audio-idle{position:absolute;left:0;right:0;width:100%;max-width:none}
 .mode-page::after{content:'';display:block;flex:0 0 var(--page-dock-height)}
 .mode-page .reader-sticky{position:relative;top:0;flex-shrink:0;box-shadow:none}
-.mode-page .reader-bar{margin:0;border-radius:0;min-height:60px;padding-block:6px;gap:7px}
-.mode-page .reader-bar h1{font-size:15px;min-width:0;line-height:1.4}
-.page-counter{color:#fff;font-size:12px;white-space:nowrap;min-height:40px;padding:7px;border-radius:6px;background:#ffffff15}
-.page-counter span{color:#c9ddd0;font-size:10px}
+.mode-page .reader-bar{margin:0;border-radius:0;min-height:56px;padding:calc(6px + env(safe-area-inset-top)) 8px 6px;gap:4px}
+.mode-page .reader-bar h1{font-size:13px;min-width:0;line-height:1.4}
+.mode-page .reader-bar .icon-btn{width:32px;min-width:32px;height:36px;min-height:36px;padding:7px}
+.mode-page .reader-bar .icon-btn svg{width:18px;height:18px}
+.mode-page .reader-tools{flex-shrink:0;flex-wrap:nowrap;gap:2px}
+.reader-page-controls{display:flex;align-items:center;flex-shrink:0;gap:4px}
+.page-counter{color:#fff;font-size:10px;white-space:nowrap;min-height:32px;padding:5px;border-radius:7px;background:#ffffff15}
+.page-counter span{color:#c9ddd0;font-size:8px}
 .mode-page .reading-modes button{min-height:44px}
 .mushaf-viewport{position:relative;flex:1 1 0;min-height:0;width:100%;overflow:hidden;overflow:clip;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;outline-offset:-3px;background:var(--surface)}
 .mushaf-viewport:active{cursor:grabbing}
@@ -23,15 +27,13 @@ body.page-reading .workspace,body.page-reading main{height:100%;min-height:0}
 .mode-page .page-ayah{padding:0}
 .mode-page .page-ayah .verse-medallion{font:400 .64em/1 QuranNaskh,serif;width:1.14em;height:1.35em;margin-inline:.22em;border-width:1.5px}
 .mode-page .mushaf-foot{flex-shrink:0;font-size:17px;min-height:37px;padding:8px 0 0;border-top:2px solid #d4d2b6}
-.page-zoom{display:flex;flex:0 0 42px;align-self:center;align-items:center;justify-content:center;gap:0;margin:2px 0 5px;background:var(--soft);border-radius:24px;color:var(--green)}
-.page-zoom button{height:40px;min-width:44px;font-size:22px;padding:3px 12px;border-radius:24px;touch-action:manipulation}
-.page-zoom [data-zoom=reset]{font-size:11px;min-width:78px}
-.page-zoom button:hover{background:#829a6d15}
-.page-audio-hint{display:flex;flex:0 0 auto;align-self:center;align-items:center;gap:6px;max-width:100%;padding:0 6px;color:var(--muted);font-size:11px;line-height:1.5}
-.page-audio-hint>svg{width:14px;height:14px;flex-shrink:0;color:var(--green)}
-.page-audio-hint button{display:grid;place-items:center;flex:0 0 32px;width:32px;height:32px;padding:7px;border-radius:50%;color:var(--muted)}
-.page-audio-hint button svg{width:13px;height:13px}
-.page-audio-hint button:hover{background:var(--soft);color:var(--green)}
+.page-zoom{display:flex;align-items:center;justify-content:center;flex:0 0 auto;gap:0;background:#ffffff15;border-radius:7px;color:#fff}
+.page-zoom button{height:32px;min-width:28px;padding:3px 4px;border-radius:7px;font-size:18px;touch-action:manipulation}
+.page-zoom [data-zoom=reset]{font-size:9px;min-width:44px}
+.page-zoom button:hover{background:#ffffff15}
+/* Keep all controls reachable on narrow phones without squeezing the title. */
+@media(max-width:360px){.mode-page .reader-bar{display:grid;grid-template-columns:32px minmax(0,1fr) auto;row-gap:0;padding-block:4px;padding-top:calc(4px + env(safe-area-inset-top))}.mode-page .reader-bar h1{grid-column:2;grid-row:1}.mode-page .reader-tools{grid-column:3;grid-row:1}.reader-page-controls{grid-column:2/4;grid-row:2;justify-self:end}.mode-page .reader-bar>a{grid-column:1;grid-row:1}}
+@media(max-height:500px) and (max-width:1000px){body.reading .sidebar{display:none}body.reading .workspace{margin:0;padding:0;max-width:none}.mode-page .reader-bar h1{white-space:nowrap}}
 body.page-reading .mode-page .page-selection{position:static;flex:0 0 auto;max-width:none;width:100%;margin:0;padding:7px 15px;min-height:52px;box-shadow:none;border-bottom:0;gap:6px}
 .mode-page .page-selection>div:first-child{font-size:11px;line-height:1.5}
 .mode-page .page-selection small{font-size:9px;margin:0}
@@ -43,5 +45,5 @@ body.page-reading .mode-page .page-selection{position:static;flex:0 0 auto;max-w
 @media(min-width:1001px) and (max-width:1150px){body.page-reading .player{left:248px}}
 @media(min-width:901px) and (max-width:1000px){body.page-reading .player{left:234px}}
 @media(min-width:701px) and (max-width:900px){body.page-reading .player{left:201px}}
-@media(max-width:700px){.mode-page .reader-bar h1{font-size:14px}.mode-page .reader-bar .icon-btn{width:36px;min-width:36px}.mode-page .reading-modes button{min-height:42px}.mode-page .reader-audio-idle{min-height:64px;padding-block:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}.mode-page .reader-audio-idle button{width:40px;height:40px}.mode-page .idle-qari{font-size:11px}.mode-page .idle-qari small{font-size:9px}}
-@media(max-height:500px){.mode-page .reader-bar{min-height:44px;padding-block:0}.mode-page .reader-bar .icon-btn{min-height:40px}.mode-page .reading-modes button{min-height:34px;padding-block:3px}.page-zoom{flex-basis:34px;margin:0}.page-zoom button{height:32px}.mode-page .page-selection small{display:none}body.page-reading .mode-page .page-selection{min-height:42px;padding-block:0}.mode-page .reader-audio-idle{min-height:52px;padding-block:5px}.mode-page .reader-audio-idle small{display:none}}
+@media(max-width:700px){.mode-page .reading-modes button{min-height:42px}.mode-page .reader-audio-idle{min-height:64px;padding-block:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}.mode-page .reader-audio-idle button{width:40px;height:40px}.mode-page .idle-qari{font-size:11px}.mode-page .idle-qari small{font-size:9px}}
+@media(max-height:500px){.mode-page .reader-bar{min-height:40px;padding-top:env(safe-area-inset-top);padding-bottom:0}.mode-page .reading-modes button{min-height:34px;padding-block:3px}.mode-page .page-selection small{display:none}body.page-reading .mode-page .page-selection{min-height:42px;padding-block:0}.mode-page .reader-audio-idle{min-height:52px;padding-block:5px}.mode-page .reader-audio-idle small{display:none}}

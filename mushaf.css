@@ -1,9 +1,15 @@
 /* Original vector artwork: no text fitting or line reflow. */
-.reader-navigation{display:grid;grid-template-columns:minmax(90px,.8fr) minmax(0,1.6fr);gap:10px;padding:8px 14px;background:var(--surface);border-top:1px solid var(--line)}
-.reader-navigation label{display:flex;align-items:center;gap:7px;min-width:0;border:1px solid var(--line);border-radius:7px;padding:0 9px;background:var(--bg)}
-.reader-navigation label>span{font-size:10px;color:var(--muted)}
-.reader-navigation select{min-width:0;width:100%;height:37px;border:0;background:transparent;color:var(--green);font:600 12px Jakarta,Arial,sans-serif;padding:0 3px;cursor:pointer}
-.mode-ayah .ayah{scroll-margin-top:184px}
+.reader-navigation{min-width:0;background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.reader-nav-tabs{display:flex;gap:18px;padding:0 18px}
+.reader-nav-tabs button{min-height:34px;padding:5px 8px;border-bottom:2px solid transparent;font-size:11px;color:var(--muted)}
+.reader-nav-tabs button[aria-selected=true]{color:var(--green);font-weight:700;border-color:var(--reader-gold)}
+.reader-strip{display:flex;gap:3px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:0 10px;max-width:100%;touch-action:pan-x pan-y}
+.reader-strip[hidden]{display:none}.reader-strip::-webkit-scrollbar{display:none}
+.reader-strip button{flex:0 0 auto;min-height:44px;padding:8px 16px;border-bottom:3px solid transparent;white-space:nowrap;font:400 12px/1.5 Jakarta,Arial,sans-serif;color:var(--muted)}
+.reader-strip button[aria-current]{font-weight:700;color:#7f682e;border-color:#c9b987}
+.reader-strip button:hover{color:var(--green)}
+.dark .reader-strip button[aria-current]{color:#e4d89e}
+.mode-ayah .ayah{scroll-margin-top:calc(var(--reader-header-height,192px) + 16px)}
 .mode-page .mushaf-sheet{background:#fffefb;color:#222}
 .mode-page .mushaf-meta,.mode-page .mushaf-foot{color:#657052}
 .mode-page .mushaf-meta b{color:#806d2c}
@@ -22,4 +28,4 @@
 .mushaf-download progress{width:100%;height:7px;accent-color:var(--green);display:block;margin:12px 0}
 .mushaf-download small{display:block;font-size:11px;color:var(--muted);margin-top:9px}.mushaf-download .download-error{color:#ad432e}
 .home-heading-actions{display:flex;align-items:center;gap:4px}.home-heading-actions .icon-btn{color:var(--green);min-width:44px;min-height:44px}
-@media(max-height:500px){.reader-navigation{padding-block:3px}.reader-navigation select{height:30px}}
+@media(max-height:500px){.reader-nav-tabs button{min-height:28px;padding-block:2px}.reader-strip button{min-height:32px;padding-block:3px}}

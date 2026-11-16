@@ -5,7 +5,7 @@ Pembaca Al-Qur’an berbentuk PWA untuk Android, iPhone, dan desktop. Situs stat
 - Teks 114 surah / 6.236 ayat, navigasi Juz, ejaan nama surah Indonesia, bacaan Latin, dan arti Indonesia.
 - Per Ayat menampilkan Arab, Latin, dan arti. Per Lembar memakai 604 halaman vektor Mushaf Madinah 1441 H (Hafs), mempertahankan bentuk tulisan, posisi ayat, dan susunan baris sumber cetak. Bingkai dan navigasi milik aplikasi. Cubit/ketuk dua kali atau +/− untuk zoom; geser untuk pan. Saat Pas layar, geser kiri/kanan untuk pindah lembar. Ketuk nomor di header untuk melompat. Ketuk ayat untuk audio atau penanda.
 - Basmalah pembuka dipisahkan tanpa nomor, kecuali Al-Fatihah (ayat 1). At-Tawbah tidak diberi basmalah pembuka. Teks sumber tetap utuh; hanya tampilannya dipisah sesuai [panduan Tanzil](https://tanzil.net/docs/a_note_on_bismillah). Jumlah ayat surah, rentang ayat per halaman, dan jumlah ayat halaman ditampilkan; jumlah ayat tiap halaman memang berbeda.
-- Dropdown Juz dan Surah tersedia dalam kedua mode baca.
+- Tab Juz dan Surah dengan daftar horizontal yang bisa digeser tersedia dalam kedua mode baca.
 - Posisi baca, penanda, ukuran teks, dan mode malam disimpan lokal pada perangkat.
 - Beranda langsung menampilkan daftar Juz/Surah. Per Ayat memakai kartu Arab, Latin, dan arti. Kontrol tambahan ada di Pengaturan.
 - Ikon headphone membuka panel audio; tidak ada pemutar yang menutupi bacaan. Pilih Mishary Rashid Alafasy (bawaan) atau Saad Al-Ghamdi. Putar langsung lewat internet, atau unduh per qari/surah untuk offline. Unduhan lama Mishary tetap dipertahankan.

@@ -13,6 +13,7 @@ const el=id=>document.getElementById(id), main=el('main'),audio=el('audio'),play
 const oldState=readState();
 let state={lastRead:oldState.lastRead||null,bookmarks:Array.isArray(oldState.bookmarks)?oldState.bookmarks:[],settings:{fontSize:34,dark:false,tajweed:false,latin:true,translation:true,readingMode:'ayah',reciter:123,...oldState.settings}};
 state.settings.fontSize=Math.min(48,Math.max(24,Number(state.settings.fontSize)||34));
+let readerNavigationTab='juz';
 let data,reciters=[],surahs=[],downloaded=new Set(),view='home',tab='juz',search='',deferredInstall,offlineReady=false;
 const downloads=new Map();let batch=false,batchAbort=false,toastTimer;
 let player=null,playSeq=0,currentObjectURL=null,currentSource=null;
@@ -53,9 +54,13 @@ function renderList(){
   const found=findSurahs(surahs,search);el('list-count').textContent=`${found.length} surah${search?' ditemukan':' · 30 juz'}`;
   node.innerHTML=found.map(s=>`<a class="surah-card" href="#read/${s.id}/1"><span class="number">${s.id}</span><div class="surah-info"><h3>${esc(s.name)}</h3><p>${esc(s.meaning||meanings[s.id]||s.english)}<span>·</span>${s.count} ayat</p></div><span class="surah-arabic"><b lang="ar" dir="rtl">${esc(s.arabic)}</b><small>${downloaded.has(s.id)?'<i class="downloaded-dot"></i>':''}${s.type==='Meccan'?'Makkiyah':'Madaniyah'}</small></span></a>`).join('')||`<div class="empty"><h2>Surah belum ditemukan</h2><p>Coba nama lain atau nomor 1–114.</p></div>`;
 }
+function centerReaderNavigation(){const rail=document.querySelector('.reader-strip:not([hidden])'),active=rail?.querySelector('[aria-current]');if(rail&&active){const a=active.getBoundingClientRect(),r=rail.getBoundingClientRect();rail.scrollLeft+=a.left-r.left-(r.width-a.width)/2;}}
+function selectReaderNavigation(kind){readerNavigationTab=kind;document.querySelectorAll('[data-action="reader-tab"]').forEach(b=>{const chosen=b.dataset.tab===kind;b.setAttribute('aria-selected',String(chosen));b.tabIndex=chosen?0:-1;});for(const name of ['juz','surah'])document.getElementById('reader-'+name+'-panel').hidden=name!==kind;centerReaderNavigation();}
 function renderReader(route){
   disposePageViewer();
-  main.innerHTML=readerHTML({data,surahs,route,settings:state.settings,lastRead:state.lastRead,bookmarks:state.bookmarks,player,downloaded,icon});
+  main.innerHTML=readerHTML({data,surahs,route,settings:state.settings,lastRead:state.lastRead,bookmarks:state.bookmarks,player,downloaded,icon,navigationTab:readerNavigationTab});
+  centerReaderNavigation();
+  const shell=document.querySelector(".reader-shell");shell.style.setProperty("--reader-header-height",shell.querySelector(".reader-sticky").offsetHeight+"px");
   syncAudioPanel();
   paintTajweed(surahs,state.settings.tajweed);
   if(route.page)mountPageViewer(route.page,goPage,()=>{
@@ -110,6 +115,8 @@ document.addEventListener('click',async event=>{
   const b=event.target.closest('[data-action]');if(!b)return;const action=b.dataset.action,id=Number(b.dataset.surah),n=Number(b.dataset.ayah);
   if(!data&&action!=='close-dialog')return;
   switch(action){
+    case'reader-tab':selectReaderNavigation(b.dataset.tab);break;
+    case'reader-open':state.settings.readingMode=currentRoute()?.page?'page':'ayah';persist();goRead(id,n);scrollTo(0,0);break;
     case'reading-mode':{const r=currentPosition();if(!r)break;state.settings.readingMode=b.dataset.mode;persist();goRead(r.surah,r.ayah);scrollTo(0,0);break;}
     case'audio-panel':showAudioPanel();break;
     case'mushaf-retry':render();break;
@@ -147,8 +154,8 @@ document.addEventListener('click',async event=>{
 });
 document.addEventListener('submit',e=>{if(e.target.id==='page-picker-form'){e.preventDefault();const n=Number(el('page-number').value);if(Number.isInteger(n)&&n>=1&&n<=604){dialog.close();goPage(n);}}});
 document.addEventListener('input',e=>{if(e.target.id==='search'){search=e.target.value;if(search&&tab!=='surah'){tab='surah';document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));}renderList();}if(e.target.id==='font-size'){state.settings.fontSize=Number(e.target.value);applySettings();el('font-label').textContent=state.settings.fontSize+' px';document.querySelector('.settings-example').style.fontSize=state.settings.fontSize+'px';persist();}if(e.target.id==='seek'&&player){const [from,to]=audioTiming(player.surah,player.ayah);audio.currentTime=(from+(to-from)*Number(e.target.value)/1000)/1000;player.finished=false;updateTimeline();}});
-document.addEventListener('change',async e=>{if(e.target.id==='reader-juz'){const j=data.juzs.find(j=>j.id===Number(e.target.value));if(j){state.settings.readingMode=currentRoute()?.page?'page':'ayah';persist();goRead(j.surah,j.ayah);scrollTo(0,0);}return;}if(e.target.id==='reader-surah'){state.settings.readingMode=currentRoute()?.page?'page':'ayah';persist();goRead(Number(e.target.value),1);scrollTo(0,0);return;}if(e.target.matches('.reciter-select')){await changeReciter(Number(e.target.value));return;}if(e.target.id==='jump-page')goPage(Number(e.target.value));if(e.target.id==='jump-ayah'){const r=currentRoute();if(r){dialog.close();goRead(r.surah,Number(e.target.value));}}if(e.target.id==='import-file'){try{const file=e.target.files[0];if(!file||file.size>1e6)throw Error('Berkas terlalu besar.');const incoming=JSON.parse(await file.text());if(incoming.app!=='ayat'||!Array.isArray(incoming.bookmarks)||incoming.bookmarks.some(p=>!isValidPosition(p,surahs))||(incoming.lastRead&&!isValidPosition(incoming.lastRead,surahs)))throw Error('Berkas cadangan tidak valid.');const unique=new Map([...state.bookmarks,...incoming.bookmarks].map(p=>[`${p.surah}:${p.ayah}`,{surah:p.surah,ayah:p.ayah,at:p.at}]));state.bookmarks=[...unique.values()];if(incoming.lastRead)state.lastRead=incoming.lastRead;persist();render();dialog.close();toast('Penanda berhasil dipulihkan.');}catch(err){toast(err.message||'Cadangan tidak dapat dibaca.');}}});
-document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches('.page-ayah')){e.preventDefault();e.target.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:0}));}});
+document.addEventListener('change',async e=>{if(e.target.matches('.reciter-select')){await changeReciter(Number(e.target.value));return;}if(e.target.id==='jump-page')goPage(Number(e.target.value));if(e.target.id==='jump-ayah'){const r=currentRoute();if(r){dialog.close();goRead(r.surah,Number(e.target.value));}}if(e.target.id==='import-file'){try{const file=e.target.files[0];if(!file||file.size>1e6)throw Error('Berkas terlalu besar.');const incoming=JSON.parse(await file.text());if(incoming.app!=='ayat'||!Array.isArray(incoming.bookmarks)||incoming.bookmarks.some(p=>!isValidPosition(p,surahs))||(incoming.lastRead&&!isValidPosition(incoming.lastRead,surahs)))throw Error('Berkas cadangan tidak valid.');const unique=new Map([...state.bookmarks,...incoming.bookmarks].map(p=>[`${p.surah}:${p.ayah}`,{surah:p.surah,ayah:p.ayah,at:p.at}]));state.bookmarks=[...unique.values()];if(incoming.lastRead)state.lastRead=incoming.lastRead;persist();render();dialog.close();toast('Penanda berhasil dipulihkan.');}catch(err){toast(err.message||'Cadangan tidak dapat dibaca.');}}});
+document.addEventListener('keydown',e=>{if(e.target.matches('[data-action=reader-tab]')&&['ArrowLeft','ArrowRight','Home','End'].includes(e.key)){e.preventDefault();const kind=e.key==='Home'?'juz':e.key==='End'?'surah':readerNavigationTab==='juz'?'surah':'juz';selectReaderNavigation(kind);document.getElementById('reader-'+kind+'-tab').focus();return;}if((e.key==='Enter'||e.key===' ')&&e.target.matches('.page-ayah')){e.preventDefault();e.target.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:0}));}});
 dialog.addEventListener('close',()=>{if(playerEl.parentElement!==document.body)document.body.append(playerEl);dialog.dataset.panel='';});
 dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
 window.addEventListener('hashchange',()=>{render();const r=currentRoute();if(!r||r.page||r.ayah===1)scrollTo(0,0);});
@@ -161,6 +168,7 @@ async function setupOffline(){if(!('serviceWorker'in navigator)||!window.isSecur
 }catch{setConnection();toast('Teks belum tersimpan offline. Buka ulang saat koneksi stabil.');}}
 async function boot(){hydrate();applySettings();try{const r=await fetch('./data/quran.json');if(!r.ok)throw Error('Data belum tersedia');data=await r.json();const mushaf=await getMushafManifest();data.pages=mushaf.pages.map(p=>({id:p.page,...p.verses[0]}));const ir=await fetch('./data/indonesian.json');if(!ir.ok)throw Error('Bacaan latin belum tersedia');const indonesian=await ir.json();const rr=await fetch('./data/reciters.json');if(!rr.ok)throw Error('Data qari belum tersedia');reciters=(await rr.json()).reciters;if(!reciters.some(r=>r.id===state.settings.reciter))state.settings.reciter=123;surahs=data.surahs;applyReciter();for(const s of surahs){const local=indonesian.chapters.find(c=>c.id===s.id);if(!local||local.ayahs.length!==s.count)throw Error('Data latin belum lengkap');s.originalName=s.name;s.name=local.name;s.meaning=local.meaning;for(const a of s.ayahs){const entry=local.ayahs.find(v=>v.n===a.n),latin=entry?.latin;if(!latin||!entry.translation)throw Error('Bacaan latin belum lengkap');a.latin=latin;a.translation=entry.translation;}}state.bookmarks=state.bookmarks.filter(p=>isValidPosition(p,surahs));if(!isValidPosition(state.lastRead,surahs))state.lastRead=null;try{downloaded=new Set(await listAudio(state.settings.reciter))}catch{toast('Penyimpanan audio tidak tersedia di mode browser ini.');}render();setupOffline();}catch{main.innerHTML=`<div class="error"><h1>Ruang baca belum siap</h1><p>Periksa koneksi dan buka ulang aplikasi. Jika ini pemasangan pertama, tunggu sampai teks tersimpan sebelum memakai mode offline.</p><button class="primary" onclick="location.reload()">Coba lagi</button></div>`;}}
 boot();
+
 
 
 

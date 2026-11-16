@@ -7,12 +7,27 @@ export function findSurahs(surahs,query){
   const q=normalizeSearch(query);
   return surahs.filter(s=>[s.id,s.name,s.originalName,s.meaning,s.arabic,s.english].filter(v=>v!=null).some(v=>normalizeSearch(v).includes(q)));
 }
-export function parseRoute(hash,surahs){
+export function parseRoute(hash,surahs,pages=[]){
+  const p=hash.match(/^#page\/(\d+)(?:\/(\d+)\/(\d+))?$/);
+  if(p){
+    const page=pages.find(v=>v.id===Number(p[1]));if(!page)return null;
+    const position={surah:Number(p[2]),ayah:Number(p[3])};
+    const selected=isValidPosition(position,surahs)&&pageForPosition(pages,position.surah,position.ayah)===page.id?position:page;
+    return {surah:selected.surah,ayah:selected.ayah,page:page.id};
+  }
   const m=hash.match(/^#read\/(\d+)(?:\/(\d+))?$/);
   if(!m)return null;
   const surah=surahs.find(s=>s.id===Number(m[1]));
   if(!surah)return null;
   return {surah:surah.id,ayah:Math.min(surah.count,Math.max(1,Number(m[2]||1)))};
+}
+export function pageForPosition(pages,surah,ayah){
+  return pages.findLast(p=>p.surah<surah||p.surah===surah&&p.ayah<=ayah)?.id||1;
+}
+export function pageVerses(corpus,pageId){
+  const start=corpus.pages.find(p=>p.id===pageId),end=corpus.pages.find(p=>p.id===pageId+1);
+  if(!start)return [];
+  return corpus.surahs.flatMap(s=>s.ayahs.filter(a=>(s.id>start.surah||s.id===start.surah&&a.n>=start.ayah)&&(!end||s.id<end.surah||s.id===end.surah&&a.n<end.ayah)).map(a=>({surah:s.id,ayah:a.n})));
 }
 export function colorRuns(text,spans){
   if(!spans)return [{text,rule:null}];

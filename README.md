@@ -8,7 +8,7 @@ Pembaca Al-Qur’an berbentuk PWA untuk Android, iPhone, dan desktop. Situs stat
 - Tab Juz dan Surah dengan daftar horizontal yang bisa digeser tersedia dalam kedua mode baca.
 - Tombol Putar Juz/Surah memutar dari awal hingga akhir pilihan. Tombol per ayat berubah menjadi jeda saat berjalan dan menampilkan indikator saat memuat. Sorotan lembar hanya muncul setelah ayat diketuk atau saat audio diputar.
 - Kontrol zoom berada di header di sebelah nomor halaman. Lembar menyesuaikan ruang layar portrait/landscape; header beradaptasi pada HP sempit tanpa kontrol yang menutupi bacaan.
-- Mode Layar bersih tersedia melalui ikon empat sudut di kanan pilihan mode baca. Menu, bingkai aplikasi, dan metadata disembunyikan agar artwork mushaf tampil lebih besar dengan susunan asli. Tombol kecil kanan atas atau Escape menampilkan menu kembali; cubit, geser, audio, dan penanda tetap berfungsi.
+- Mode Layar bersih tersedia melalui ikon empat sudut di kanan pilihan mode baca. Hanya header atas yang disembunyikan; Per Lembar/Per Ayat, tombol layar bersih, pilihan Juz/Surah, bingkai, nomor halaman, dan keterangan lembar tetap terlihat. Ketuk tombol layar bersih yang sama atau Escape untuk mengembalikan header. Cubit, geser, audio, dan penanda tetap berfungsi.
 - Posisi baca, penanda, ukuran teks, dan mode malam disimpan lokal pada perangkat.
 - Beranda langsung menampilkan daftar Juz/Surah. Per Ayat memakai kartu Arab, Latin, dan arti. Kontrol tambahan ada di Pengaturan.
 - Ikon headphone membuka panel audio; tidak ada pemutar yang menutupi bacaan. Pilih Mishary Rashid Alafasy (bawaan) atau Saad Al-Ghamdi. Putar langsung lewat internet, atau unduh per qari/surah untuk offline. Unduhan lama Mishary tetap dipertahankan.

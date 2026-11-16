@@ -1,5 +1,5 @@
 const CACHE_PREFIX=`ayat-${encodeURIComponent(new URL(self.registration.scope).pathname)}-`;
-const CACHE=CACHE_PREFIX+'v18';
+const CACHE=CACHE_PREFIX+'v19';
 const SHELL=['./','./index.html','./style.css','./app.js','./core.js','./storage.js','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./fonts/AmiriQuran.ttf','./fonts/Jakarta.ttf','./data/quran.json','./data/indonesian.json','./licenses/Indonesian.txt','./licenses/Tanzil.txt','./licenses/Tajweed.txt','./licenses/Audio.txt','./licenses/amiriquran-OFL.txt','./licenses/plusjakartasans-OFL.txt'];
 SHELL.push('./reader.js','./reader.css','./fonts/ScheherazadeNew.ttf','./licenses/scheherazade-OFL.txt');
 SHELL.push('./page-viewer.js','./page-viewer.css');

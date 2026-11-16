@@ -1,0 +1,42 @@
+/* One fixed-ratio sheet lives inside the available viewport. Zoom transforms
+   the sheet, never the Arabic text or its line wrapping. */
+body.page-reading,body.page-reading.has-player{height:100vh;height:100dvh;overflow:hidden;padding:0;overscroll-behavior:none}
+body.page-reading .workspace,body.page-reading main{height:100%;min-height:0}
+.reader-shell.mode-page{position:relative;display:flex;flex-direction:column;height:100vh;height:100dvh;padding:0;overflow:hidden;--page-dock-height:78px}
+.mode-page .reader-audio-idle{position:absolute;left:0;right:0;width:100%;max-width:none}
+.mode-page::after{content:'';display:block;flex:0 0 var(--page-dock-height)}
+.mode-page .reader-sticky{position:relative;top:0;flex-shrink:0;box-shadow:none}
+.mode-page .reader-bar{margin:0;border-radius:0;min-height:60px;padding-block:6px;gap:7px}
+.mode-page .reader-bar h1{font-size:15px;min-width:0;line-height:1.4}
+.page-counter{color:#fff;font-size:12px;white-space:nowrap;min-height:40px;padding:7px;border-radius:6px;background:#ffffff15}
+.page-counter span{color:#c9ddd0;font-size:10px}
+.mode-page .reading-modes button{min-height:44px}
+.mushaf-viewport{position:relative;flex:1 1 0;min-height:0;width:100%;overflow:hidden;overflow:clip;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;outline-offset:-3px;background:var(--surface)}
+.mushaf-viewport:active{cursor:grabbing}
+.mushaf-stage{position:absolute;top:0;left:0;width:720px;height:1080px;transform-origin:0 0;will-change:transform}
+.mode-page .mushaf-sheet{width:720px;height:1080px;display:flex;flex-direction:column;padding:17px;border:6px double #94aa74;outline:2px solid #c5b87e;outline-offset:3px;overflow:visible}
+.mode-page .mushaf-meta{flex-shrink:0;min-height:54px;padding:8px 16px;font-size:20px;border:2px solid #c7c49e}
+.mode-page .mushaf-meta b{font-size:23px}
+.mode-page .mushaf-text{display:flex;flex-direction:column;flex:1 1 0;min-height:0;padding:12px 9px;font-size:var(--page-font,36px);line-height:1.9}
+.mode-page .mushaf-lines{flex-shrink:0;margin:7px 0;line-height:1.9;text-align:justify;text-align-last:center}
+.mode-page .mushaf-surah{flex-shrink:0;font:400 38px/1.5 QuranNaskh,Amiri,serif;padding:2px 8px;margin:5px 0 9px;border-block:2px solid #c7c49e}
+.mode-page .page-ayah{padding:0}
+.mode-page .page-ayah .verse-medallion{font:400 .64em/1 QuranNaskh,serif;width:1.14em;height:1.35em;margin-inline:.22em;border-width:1.5px}
+.mode-page .mushaf-foot{flex-shrink:0;font-size:17px;min-height:37px;padding:8px 0 0;border-top:2px solid #d4d2b6}
+.page-zoom{display:flex;flex:0 0 42px;align-self:center;align-items:center;justify-content:center;gap:0;margin:2px 0 5px;background:var(--soft);border-radius:24px;color:var(--green)}
+.page-zoom button{height:40px;min-width:44px;font-size:22px;padding:3px 12px;border-radius:24px;touch-action:manipulation}
+.page-zoom [data-zoom=reset]{font-size:11px;min-width:78px}
+.page-zoom button:hover{background:#829a6d15}
+body.page-reading .mode-page .page-selection{position:static;flex:0 0 auto;max-width:none;width:100%;margin:0;padding:7px 15px;min-height:52px;box-shadow:none;border-bottom:0;gap:6px}
+.mode-page .page-selection>div:first-child{font-size:11px;line-height:1.5}
+.mode-page .page-selection small{font-size:9px;margin:0}
+.mode-page .page-selection .ayah-buttons{gap:0}
+.mode-page .page-selection .save-position{min-height:40px;flex-basis:36px}
+#page-picker-form{display:grid;gap:15px;font-size:13px}
+#page-number{width:100%;padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-size:19px}
+#page-picker-form .primary{justify-content:center}
+@media(min-width:1001px) and (max-width:1150px){body.page-reading .player{left:248px}}
+@media(min-width:901px) and (max-width:1000px){body.page-reading .player{left:234px}}
+@media(min-width:701px) and (max-width:900px){body.page-reading .player{left:201px}}
+@media(max-width:700px){.mode-page .reader-bar h1{font-size:14px}.mode-page .reader-bar .icon-btn{width:36px;min-width:36px}.mode-page .reading-modes button{min-height:42px}.mode-page .reader-audio-idle{min-height:64px;padding-block:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom))}.mode-page .reader-audio-idle button{width:40px;height:40px}.mode-page .idle-qari{font-size:11px}.mode-page .idle-qari small{font-size:9px}}
+@media(max-height:500px){.mode-page .reader-bar{min-height:44px;padding-block:0}.mode-page .reader-bar .icon-btn{min-height:40px}.mode-page .reading-modes button{min-height:34px;padding-block:3px}.page-zoom{flex-basis:34px;margin:0}.page-zoom button{height:32px}.mode-page .page-selection small{display:none}body.page-reading .mode-page .page-selection{min-height:42px;padding-block:0}.mode-page .reader-audio-idle{min-height:52px;padding-block:5px}.mode-page .reader-audio-idle small{display:none}}

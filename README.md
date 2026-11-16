@@ -3,7 +3,7 @@
 Pembaca Al-Qur’an berbentuk PWA untuk Android, iPhone, dan desktop. Situs statis ini bisa dipasang di layar utama tanpa akun.
 
 - Teks 114 surah / 6.236 ayat, navigasi Juz, ejaan nama surah Indonesia, bacaan Latin, dan arti Indonesia.
-- Per Ayat menampilkan Arab, Latin, dan arti. Per Lembar mengikuti batas 604 halaman; baris menyesuaikan layar. Ketuk ayat untuk audio atau penanda.
+- Per Ayat menampilkan Arab, Latin, dan arti. Per Lembar menampilkan satu halaman utuh dari pembagian 604 halaman. Cubit/ketuk dua kali atau +/− untuk zoom; geser untuk pan. Saat Pas layar, geser kiri/kanan untuk pindah lembar. Ketuk nomor di header untuk melompat. Ketuk ayat untuk audio atau penanda.
 - Posisi baca, penanda, ukuran teks, dan mode malam disimpan lokal pada perangkat.
 - Audio Mishary Rashid Alafasy bisa diputar langsung lewat internet. Unduh per surah jika ingin mendengarkan offline.
 - Tajwid warna merupakan pratinjau, belum ditashih independen, dan hanya tersedia pada ayat yang cocok persis dengan teks sumber anotasi.

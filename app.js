@@ -142,7 +142,7 @@ document.addEventListener('click',async event=>{
     case'download-mushaf':downloadMushaf();break;
     case'cancel-mushaf':cancelMushafDownload();break;
     case'mushaf-downloads':dialog.close();navigate('#downloads');break;
-    case'page-picker':{const r=currentRoute();dialogOpen('Buka halaman',`<form id="page-picker-form"><label for="page-number">Nomor halaman (1–604)</label><input id="page-number" type="number" min="1" max="604" step="1" required inputmode="numeric" value="${r.page}" autofocus><button class="primary" type="submit">Buka halaman</button></form><p class="dialog-copy">Geser halaman ke kiri untuk melanjutkan, atau ke kanan untuk kembali.</p>`);break;}
+    case'page-picker':{const r=currentRoute();dialogOpen('Buka halaman',`<form id="page-picker-form"><label for="page-number">Nomor halaman (1–604)</label><input id="page-number" type="number" min="1" max="604" step="1" required inputmode="numeric" value="${r.page}" autofocus><button class="primary" type="submit">Buka halaman</button></form><p class="dialog-copy">Seperti membuka mushaf Arab, usap jari ke kanan untuk halaman berikutnya, atau ke kiri untuk kembali.</p>`);break;}
     case'page-turn':goPage(Number(b.dataset.page));break;
     case'select-ayah':{const y=scrollY,page=currentRoute().page;selectedPageAyah={page,surah:id,ayah:n};history.replaceState(null,'','#page/'+page+'/'+id+'/'+n);render();scrollTo(0,y);showAyahActions(id,n);break;}
     case'play-sequence':playAyah(id,n,true,audioRange(data,'surah',id));break;

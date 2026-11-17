@@ -42,9 +42,10 @@ export async function downloadMushaf(){
  finally{running=false;controller=null;changed();}
 }
 
-export async function mountMushafArtwork(host,page,{signal,onReady,onError}){
+export async function mountMushafArtwork(host,page,{signal,prepared,onReady,onError}){
  try{
-  const {svg:source,meta}=await loadMushafSVG(page,signal);if(signal.aborted||!host.isConnected)return;
+  const {svg:source,meta}=prepared??await loadMushafSVG(page,signal);if(signal.aborted||!host.isConnected)return;
+  if(meta.page!==page)throw Error('Halaman mushaf tidak cocok.');
   const doc=new DOMParser().parseFromString(source,'image/svg+xml');
   if(doc.querySelector('parsererror')||doc.documentElement.localName!=='svg')throw Error('Halaman mushaf tidak valid.');
   // The audited resource uses only SVG outlines. Reject executable/external content.

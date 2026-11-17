@@ -17,7 +17,15 @@ body.page-reading .workspace,body.page-reading main{height:100%;min-height:0}
 .mode-page .reading-modes button{min-height:44px}
 .mushaf-viewport{position:relative;flex:1 1 0;min-height:0;width:100%;overflow:hidden;overflow:clip;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;outline-offset:-3px;background:var(--surface)}
 .mushaf-viewport:active{cursor:grabbing}
-.mushaf-stage{position:absolute;top:0;left:0;width:720px;height:1080px;transform-origin:0 0;will-change:transform}
+.mushaf-stage{position:absolute;top:0;left:0;width:720px;height:1080px;transform-origin:0 0;will-change:transform;pointer-events:none}
+.mushaf-error{pointer-events:auto}
+.mushaf-outgoing{z-index:2;pointer-events:none}
+.mushaf-outgoing .mushaf-sheet{box-shadow:0 8px 35px #173f3533}
+.mushaf-edge{position:absolute;z-index:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;cursor:pointer}
+.mushaf-edge:disabled{cursor:default}
+.mushaf-edge:focus-visible{z-index:3;outline:2px solid #927536;outline-offset:-4px;background:#c4a44c14}
+.mushaf-viewport[data-turning=true]{cursor:progress}
+.mushaf-viewport[data-turning=true] .page-ayah{pointer-events:none}
 .mode-page .mushaf-sheet{width:720px;height:1080px;display:flex;flex-direction:column;padding:17px;border:6px double #94aa74;outline:2px solid #c5b87e;outline-offset:3px;overflow:visible}
 .mode-page .mushaf-meta{flex-shrink:0;min-height:54px;padding:8px 16px;font-size:20px;border:2px solid #c7c49e}
 .mode-page .mushaf-meta b{font-size:23px}

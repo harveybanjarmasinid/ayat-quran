@@ -57,7 +57,7 @@ function renderList(){
 function centerReaderNavigation(){const rail=document.querySelector('.reader-strip:not([hidden])'),active=rail?.querySelector('[aria-current]');if(rail&&active){const a=active.getBoundingClientRect(),r=rail.getBoundingClientRect();rail.scrollLeft+=a.left-r.left-(r.width-a.width)/2;}}
 function selectReaderNavigation(kind){readerNavigationTab=kind;document.querySelectorAll('[data-action="reader-tab"]').forEach(b=>{const chosen=b.dataset.tab===kind;b.setAttribute('aria-selected',String(chosen));b.tabIndex=chosen?0:-1;});for(const name of ['juz','surah'])document.getElementById('reader-'+name+'-panel').hidden=name!==kind;const r=currentRoute(),b=document.querySelector('.reader-play-context');b.dataset.kind=kind;b.dataset.scopeId=kind==='juz'?juzAt(r):r.surah;syncPlaybackButtons();centerReaderNavigation();}
 function renderReader(route){
-  disposePageViewer();
+  disposePageViewer(route.page);
   main.innerHTML=readerHTML({data,surahs,route,settings:state.settings,lastRead:state.lastRead,bookmarks:state.bookmarks,player,downloaded,icon,navigationTab:readerNavigationTab});
   centerReaderNavigation();
   const shell=document.querySelector(".reader-shell");shell.style.setProperty("--reader-header-height",shell.querySelector(".reader-sticky").offsetHeight+"px");
@@ -142,7 +142,7 @@ document.addEventListener('click',async event=>{
     case'download-mushaf':downloadMushaf();break;
     case'cancel-mushaf':cancelMushafDownload();break;
     case'mushaf-downloads':dialog.close();navigate('#downloads');break;
-    case'page-picker':{const r=currentRoute();dialogOpen('Buka halaman',`<form id="page-picker-form"><label for="page-number">Nomor halaman (1–604)</label><input id="page-number" type="number" min="1" max="604" step="1" required inputmode="numeric" value="${r.page}" autofocus><button class="primary" type="submit">Buka halaman</button></form><p class="dialog-copy">Seperti membuka mushaf Arab, usap jari ke kanan untuk halaman berikutnya, atau ke kiri untuk kembali.</p>`);break;}
+    case'page-picker':{const r=currentRoute();dialogOpen('Buka halaman',`<form id="page-picker-form"><label for="page-number">Nomor halaman (1–604)</label><input id="page-number" type="number" min="1" max="604" step="1" required inputmode="numeric" value="${r.page}" autofocus><button class="primary" type="submit">Buka halaman</button></form><p class="dialog-copy">Seperti membuka mushaf Arab, usap jari ke kanan untuk halaman berikutnya, atau ke kiri untuk kembali. Kamu juga bisa mengetuk tepi kertas yang kosong: kiri untuk berikutnya, kanan untuk sebelumnya.</p>`);break;}
     case'page-turn':goPage(Number(b.dataset.page));break;
     case'select-ayah':{const y=scrollY,page=currentRoute().page;selectedPageAyah={page,surah:id,ayah:n};history.replaceState(null,'','#page/'+page+'/'+id+'/'+n);render();scrollTo(0,y);showAyahActions(id,n);break;}
     case'play-sequence':playAyah(id,n,true,audioRange(data,'surah',id));break;

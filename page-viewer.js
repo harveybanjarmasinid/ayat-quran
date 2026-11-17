@@ -1,22 +1,28 @@
 // Publisher-derived outlines keep every line and verse in its printed position.
-import {mountMushafArtwork} from './mushaf.js';
+import {mountMushafArtwork,loadMushafSVG} from './mushaf.js';
 const PAGE_WIDTH=720,PAGE_HEIGHT=1080,MAX_ZOOM=4;
-let session={page:null,zoom:1,x:0,y:0,lastTap:0},clearDisplay=false,cleanup=()=>{},focusVerse=()=>{};
+let session={page:null,zoom:1,x:0,y:0,lastTap:0},clearDisplay=false,cleanup=()=>{},focusVerse=()=>{},pendingTurn=null;
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-export function disposePageViewer(){cleanup();cleanup=()=>{};focusVerse=()=>{};document.body.classList.remove('page-clear');}
+export function disposePageViewer(nextPage=null){cleanup();cleanup=()=>{};focusVerse=()=>{};if(pendingTurn?.to!==nextPage)pendingTurn=null;document.body.classList.remove('page-clear');}
 export function followPageVerse(node){focusVerse(node)}
 
 export function mountPageViewer(page,onTurn,onReady=()=>{}){
   const viewport=document.querySelector('.mushaf-viewport'),stage=document.querySelector('.mushaf-stage'),shell=document.querySelector('.mode-page');
   if(!viewport||!stage)return;
+  const transition=pendingTurn?.to===page?pendingTurn:null;pendingTurn=null;
   viewport.dataset.page=String(page);
   if(session.page!==page)session={page,zoom:1,x:0,y:0,lastTap:0};
   const abort=new AbortController(),signal=abort.signal,pointers=new Map();
-  let width=0,height=0,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false;
+  let width=0,height=0,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false,turning=Boolean(transition),animations=[];
+  const snapshot=transition?.snapshot;
+  const edges=[{offset:1,label:'Halaman berikutnya — ketuk tepi kiri'},{offset:-1,label:'Halaman sebelumnya — ketuk tepi kanan'}].map(({offset,label})=>{
+    const button=document.createElement('button');button.type='button';button.className='mushaf-edge';button.dataset.pageTurn=String(offset);button.setAttribute('aria-label',label);button.title=label;viewport.insertBefore(button,stage);return button;
+  });
+  if(snapshot){snapshot.classList.add('mushaf-outgoing');viewport.append(snapshot);stage.style.visibility='hidden';viewport.dataset.turning='true';viewport.setAttribute('aria-busy','true');}
   const host=stage.querySelector('.mushaf-artwork-host'),zoomBar=shell.querySelector('.page-zoom');
   const focusToggle=shell.querySelector('[data-page-focus="toggle"]');
   function syncClearDisplay(){document.body.classList.toggle('page-clear',clearDisplay);focusToggle.setAttribute('aria-pressed',String(clearDisplay));focusToggle.setAttribute('aria-label',clearDisplay?'Keluar layar bersih':'Aktifkan layar bersih');focusToggle.title=clearDisplay?'Tampilkan header':'Layar bersih';}
-  function setClearDisplay(value){clearDisplay=value;session.zoom=1;session.x=0;session.y=0;session.lastTap=0;syncClearDisplay();layout();focusToggle.focus({preventScroll:true});}
+  function setClearDisplay(value){if(turning)return;clearDisplay=value;session.zoom=1;session.x=0;session.y=0;session.lastTap=0;syncClearDisplay();layout();focusToggle.focus({preventScroll:true});}
   syncClearDisplay();
   focusToggle.addEventListener('click',()=>setClearDisplay(!clearDisplay),{signal});
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&clearDisplay&&!document.querySelector('dialog[open]')){e.preventDefault();setClearDisplay(false);}},{signal});
@@ -28,6 +34,8 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     zoomBar.querySelector('[data-zoom="reset"]').textContent=session.zoom<=1.01?'Pas layar':Math.round(session.zoom*100)+'%';
     zoomBar.querySelector('[data-zoom="out"]').disabled=session.zoom<=1.01;
     zoomBar.querySelector('[data-zoom="in"]').disabled=session.zoom>=MAX_ZOOM;
+    const sheetWidth=PAGE_WIDTH*scale,sheetHeight=PAGE_HEIGHT*scale,left=(width-sheetWidth)/2+session.x,top=(height-sheetHeight)/2+session.y,edgeWidth=clamp(sheetWidth*.16,24,72);
+    for(const edge of edges){const next=Number(edge.dataset.pageTurn);edge.hidden=session.zoom>1.01||!fontReady;edge.disabled=turning||page+next<1||page+next>604;Object.assign(edge.style,{left:(next===1?left:left+sheetWidth-edgeWidth)+'px',top:top+'px',width:edgeWidth+'px',height:sheetHeight+'px'});}
   }
   function setZoom(value,anchor={x:width/2,y:height/2}){
     const old=fit*session.zoom,tx=(width-PAGE_WIDTH*old)/2+session.x,ty=(height-PAGE_HEIGHT*old)/2+session.y;
@@ -46,8 +54,24 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     viewport.dataset.size=width+'x'+height;
   }
   function schedule(){cancelAnimationFrame(frame);frame=requestAnimationFrame(layout)}
+  function finishTurn(){
+    snapshot?.remove();for(const animation of animations)animation.cancel();animations=[];
+    stage.style.visibility='';turning=false;delete viewport.dataset.turning;viewport.removeAttribute('aria-busy');
+    if(!disposed){layout();viewport.dataset.ready='true';if(transition?.restoreFocus)viewport.focus({preventScroll:true});}
+  }
+  async function revealPage(){
+    stage.style.visibility='';
+    if(!snapshot||matchMedia('(prefers-reduced-motion: reduce)').matches||!stage.animate){finishTurn();return;}
+    const direction=transition.offset,base=stage.style.transform,options={duration:320,easing:'cubic-bezier(.22,.61,.36,1)',fill:'both'};
+    animations=[
+      stage.animate([{transform:base+` translateX(${-direction*PAGE_WIDTH*.2}px)`},{transform:base}],options),
+      snapshot.animate([{transform:snapshot.style.transform,opacity:1,offset:0},{transform:base+` translateX(${direction*PAGE_WIDTH*.95}px)`,opacity:1,offset:.9},{transform:base+` translateX(${direction*PAGE_WIDTH*1.05}px)`,opacity:0,offset:1}],options)
+    ];
+    await Promise.allSettled(animations.map(animation=>animation.finished));if(!disposed)finishTurn();
+  }
   const resize=new ResizeObserver(schedule);resize.observe(viewport);
-  mountMushafArtwork(host,page,{signal,onReady:()=>{if(disposed)return;fontReady=true;host.setAttribute('aria-busy','false');layout();viewport.dataset.ready='true';onReady();},onError:error=>{
+  mountMushafArtwork(host,page,{signal,prepared:transition?.artwork,onReady:()=>{if(disposed)return;fontReady=true;host.setAttribute('aria-busy','false');layout();onReady();revealPage();},onError:error=>{
+    snapshot?.remove();stage.style.visibility='';turning=false;delete viewport.dataset.turning;viewport.removeAttribute('aria-busy');transform();
     host.setAttribute('aria-busy','false');viewport.dataset.error='true';
     const box=document.createElement('div');box.className='mushaf-error';
     const title=document.createElement('strong');title.textContent=navigator.onLine?'Halaman belum dapat dibuka':'Halaman ini belum tersimpan';
@@ -57,12 +81,22 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     box.append(title,message,retry,fallback);host.replaceChildren(box);
   }});
   layout();window.addEventListener('resize',schedule,{signal});window.visualViewport?.addEventListener('resize',schedule,{signal});
-  zoomBar.addEventListener('click',e=>{const action=e.target.closest('[data-zoom]')?.dataset.zoom;if(action)setZoom(action==='reset'?1:session.zoom+(action==='in'?.5:-.5));},{signal});
+  zoomBar.addEventListener('click',e=>{if(turning)return;const action=e.target.closest('[data-zoom]')?.dataset.zoom;if(action)setZoom(action==='reset'?1:session.zoom+(action==='in'?.5:-.5));},{signal});
   const local=e=>{const r=viewport.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
   // The next mushaf page is to the left: swipe right to reveal it.
-  const turnPage=offset=>onTurn(page+offset);
+  async function turnPage(offset){
+    const next=page+offset;if(turning||session.zoom>1.01||next<1||next>604||disposed)return;
+    turning=true;clearTimeout(tapTimer);session.lastTap=0;viewport.dataset.turning='true';viewport.setAttribute('aria-busy','true');transform();
+    try{
+      const artwork=await loadMushafSVG(next,signal);if(disposed)return;
+      const copy=fontReady&&!matchMedia('(prefers-reduced-motion: reduce)').matches?stage.cloneNode(true):null;
+      if(copy){copy.setAttribute('aria-hidden','true');copy.inert=true;copy.querySelectorAll('.page-ayah').forEach(n=>n.remove());copy.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));}
+      pendingTurn={to:next,offset,artwork,snapshot:copy,restoreFocus:viewport.contains(document.activeElement)};onTurn(next);
+    }catch(error){if(!disposed&&error.name!=='AbortError'){pendingTurn=null;onTurn(next);}}
+  }
   const pinchInfo=()=>{const [a,b]=[...pointers.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.hypot(a.x-b.x,a.y-b.y)}};
   viewport.addEventListener('pointerdown',e=>{
+    if(turning)return;
     if(e.target.closest('.mushaf-error'))return;
     clearTimeout(tapTimer);
     if(e.pointerType==='mouse'&&e.button!==0)return;
@@ -92,9 +126,15 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     gesture=null;pinch=null;
   }
   viewport.addEventListener('pointerup',pointerEnd,{signal});viewport.addEventListener('pointercancel',pointerEnd,{signal});
-  viewport.addEventListener('click',e=>{if(Date.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();return;}const verse=e.target.closest('.page-ayah');if(verse&&e.detail>0){e.preventDefault();e.stopImmediatePropagation();clearTimeout(tapTimer);tapTimer=setTimeout(()=>{if(!disposed&&verse.isConnected)verse.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:0}));},310);}},{capture:true,signal});
-  viewport.addEventListener('wheel',e=>{if(e.ctrlKey||e.metaKey){e.preventDefault();setZoom(session.zoom*Math.exp(-e.deltaY*.005),local(e));}else if(session.zoom>1.01){e.preventDefault();session.x-=e.deltaX;session.y-=e.deltaY;transform();}},{passive:false,signal});
+  viewport.addEventListener('click',e=>{
+    if(turning||Date.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();return;}
+    const edge=e.target.closest('[data-page-turn]');
+    if(edge){e.preventDefault();e.stopImmediatePropagation();if(edge.disabled||session.zoom>1.01)return;clearTimeout(tapTimer);if(e.detail===0)turnPage(Number(edge.dataset.pageTurn));else tapTimer=setTimeout(()=>turnPage(Number(edge.dataset.pageTurn)),310);return;}
+    const verse=e.target.closest('.page-ayah');if(verse&&e.detail>0){e.preventDefault();e.stopImmediatePropagation();clearTimeout(tapTimer);tapTimer=setTimeout(()=>{if(!disposed&&verse.isConnected)verse.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:0}));},310);}
+  },{capture:true,signal});
+  viewport.addEventListener('wheel',e=>{if(turning){e.preventDefault();return;}if(e.ctrlKey||e.metaKey){e.preventDefault();setZoom(session.zoom*Math.exp(-e.deltaY*.005),local(e));}else if(session.zoom>1.01){e.preventDefault();session.x-=e.deltaX;session.y-=e.deltaY;transform();}},{passive:false,signal});
   viewport.addEventListener('keydown',e=>{
+    if(turning)return;
     if(['+','=','-','0','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();
       if(e.key==='0')setZoom(1);else if(e.key==='+'||e.key==='=')setZoom(session.zoom+.5);else if(e.key==='-')setZoom(session.zoom-.5);
       else if(session.zoom>1.01){session.x+=e.key==='ArrowLeft'?60:e.key==='ArrowRight'?-60:0;session.y+=e.key==='ArrowUp'?60:e.key==='ArrowDown'?-60:0;transform();}
@@ -103,5 +143,5 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
   },{signal});
   // In zoom mode, following audio pans the page instead of scrolling the body.
   focusVerse=node=>{if(!node||session.zoom<=1.01)return;const r=node.getBoundingClientRect(),v=viewport.getBoundingClientRect();if(r.top<v.top||r.bottom>v.bottom){session.y+=v.top+height/2-(r.top+r.bottom)/2;transform();}};
-  cleanup=()=>{disposed=true;abort.abort();resize.disconnect();cancelAnimationFrame(frame);clearTimeout(tapTimer)};
+  cleanup=()=>{disposed=true;abort.abort();resize.disconnect();cancelAnimationFrame(frame);clearTimeout(tapTimer);snapshot?.remove();for(const animation of animations)animation.cancel();edges.forEach(edge=>edge.remove());};
 }

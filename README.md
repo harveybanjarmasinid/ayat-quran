@@ -3,7 +3,7 @@
 Pembaca Al-Qur’an berbentuk PWA untuk Android, iPhone, dan desktop. Situs statis ini bisa dipasang di layar utama tanpa akun.
 
 - Teks 114 surah / 6.236 ayat, navigasi Juz, ejaan nama surah Indonesia, bacaan Latin, dan arti Indonesia.
-- Per Ayat menampilkan Arab, Latin, dan arti. Per Halaman memakai 604 halaman vektor Mushaf Madinah 1441 H (Hafs), mempertahankan bentuk tulisan, posisi ayat, dan susunan baris sumber cetak. Bingkai dan navigasi milik aplikasi. Cubit/ketuk dua kali atau +/− untuk zoom; geser untuk pan. Saat Pas layar, geser ke kiri untuk halaman berikutnya dan ke kanan untuk halaman sebelumnya. Ketuk nomor di header untuk melompat. Ketuk ayat untuk audio atau penanda.
+- Per Ayat menampilkan Arab, Latin, dan arti. Per Halaman memakai 604 halaman vektor Mushaf Madinah 1441 H (Hafs), mempertahankan bentuk tulisan, posisi ayat, dan susunan baris sumber cetak. Bingkai dan navigasi milik aplikasi. Cubit/ketuk dua kali atau +/− untuk zoom; geser untuk pan. Saat Pas layar, geser ke kiri untuk halaman berikutnya dan ke kanan untuk halaman sebelumnya; panah keyboard kiri/kanan mengikuti arah yang sama. Ketuk nomor di header untuk melompat. Ketuk ayat untuk audio atau penanda.
 - Basmalah pembuka dipisahkan tanpa nomor, kecuali Al-Fatihah (ayat 1). At-Tawbah tidak diberi basmalah pembuka. Teks sumber tetap utuh; hanya tampilannya dipisah sesuai [panduan Tanzil](https://tanzil.net/docs/a_note_on_bismillah). Jumlah ayat surah, rentang ayat per halaman, dan jumlah ayat halaman ditampilkan; jumlah ayat tiap halaman memang berbeda.
 - Tab Juz dan Surah dengan daftar horizontal yang bisa digeser tersedia dalam kedua mode baca.
 - Tombol Putar Juz/Surah memutar dari awal hingga akhir pilihan. Tombol per ayat berubah menjadi jeda saat berjalan dan menampilkan indikator saat memuat. Sorotan lembar hanya muncul setelah ayat diketuk atau saat audio diputar.
@@ -16,7 +16,7 @@ Pembaca Al-Qur’an berbentuk PWA untuk Android, iPhone, dan desktop. Situs stat
 
 ## Pasang
 
-Buka alamat HTTPS GitHub Pages, lalu ketuk ikon Pasang aplikasi di kanan atas beranda. Panduan iPhone dan Android memakai screenshot dengan penanda lingkaran. Masing-masing terdiri dari 3 langkah yang dibaca dengan menggulir ke bawah. Android: Chrome → menu ⋮ → Instal dan buat pintasan → opsi aplikasi di bagian atas (jika sudah terpasang, ketuk untuk membuka aplikasi). iPhone: Safari → Bagikan → Tambahkan ke Layar Utama → Tambah; aktifkan Buka sebagai App Web jika tersedia. Tunggu “Teks siap offline”. Halaman mushaf yang dibuka tersimpan otomatis; untuk seluruh 604 halaman unduh paket sekitar 95 MB melalui Unduhan. Audio diunduh terpisah.
+Buka alamat HTTPS GitHub Pages, lalu ketuk ikon Pasang aplikasi di kanan atas beranda. Panduan iPhone dan Android memakai screenshot dengan penanda lingkaran. Masing-masing terdiri dari 3 langkah yang dibaca dengan menggulir ke bawah. Judul dan tombol tutup tetap terlihat di atas saat panduan digulir. Android: Chrome → menu ⋮ → Instal dan buat pintasan → opsi aplikasi di bagian atas (jika sudah terpasang, ketuk untuk membuka aplikasi). iPhone: Safari → Bagikan → Tambahkan ke Layar Utama → Tambah; aktifkan Buka sebagai App Web jika tersedia. Tunggu “Teks siap offline”. Halaman mushaf yang dibuka tersimpan otomatis; untuk seluruh 604 halaman unduh paket sekitar 95 MB melalui Unduhan. Audio diunduh terpisah.
 
 ## Jalankan dan terbitkan
 

@@ -59,6 +59,8 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
   layout();window.addEventListener('resize',schedule,{signal});window.visualViewport?.addEventListener('resize',schedule,{signal});
   zoomBar.addEventListener('click',e=>{const action=e.target.closest('[data-zoom]')?.dataset.zoom;if(action)setZoom(action==='reset'?1:session.zoom+(action==='in'?.5:-.5));},{signal});
   const local=e=>{const r=viewport.getBoundingClientRect();return {x:e.clientX-r.left,y:e.clientY-r.top}};
+  // Keep page navigation consistent: left advances, right goes back.
+  const turnPage=direction=>onTurn(page+(direction<0?1:-1));
   const pinchInfo=()=>{const [a,b]=[...pointers.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.hypot(a.x-b.x,a.y-b.y)}};
   viewport.addEventListener('pointerdown',e=>{
     if(e.target.closest('.mushaf-error'))return;
@@ -84,7 +86,7 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     if(gesture){
       const dx=point.x-gesture.start.x,dy=point.y-gesture.start.y;
       if(gesture.multiple||gesture.moved)suppressClickUntil=Date.now()+800;
-      if(!gesture.multiple&&gesture.zoom<=1.01&&Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.4){session.lastTap=0;onTurn(page+(dx<0?1:-1));}
+      if(!gesture.multiple&&gesture.zoom<=1.01&&Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.4){session.lastTap=0;turnPage(dx);}
       else if(!gesture.multiple&&!gesture.moved){const now=Date.now();if(now-session.lastTap<300&&Math.hypot(point.x-(session.tapX||0),point.y-(session.tapY||0))<35){suppressClickUntil=now+800;setZoom(session.zoom>1.01?1:2,point);session.lastTap=0;}else{session.lastTap=now;session.tapX=point.x;session.tapY=point.y;}}
     }
     gesture=null;pinch=null;
@@ -96,7 +98,7 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     if(['+','=','-','0','ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();
       if(e.key==='0')setZoom(1);else if(e.key==='+'||e.key==='=')setZoom(session.zoom+.5);else if(e.key==='-')setZoom(session.zoom-.5);
       else if(session.zoom>1.01){session.x+=e.key==='ArrowLeft'?60:e.key==='ArrowRight'?-60:0;session.y+=e.key==='ArrowUp'?60:e.key==='ArrowDown'?-60:0;transform();}
-      else if(e.key==='ArrowLeft'||e.key==='ArrowRight')onTurn(page+(e.key==='ArrowRight'?1:-1));
+      else if(e.key==='ArrowLeft'||e.key==='ArrowRight')turnPage(e.key==='ArrowLeft'?-1:1);
     }
   },{signal});
   // In zoom mode, following audio pans the page instead of scrolling the body.

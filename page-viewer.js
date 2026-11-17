@@ -13,12 +13,10 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
   viewport.dataset.page=String(page);
   if(session.page!==page)session={page,zoom:1,x:0,y:0,lastTap:0};
   const abort=new AbortController(),signal=abort.signal,pointers=new Map();
-  let width=0,height=0,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false,turning=Boolean(transition),animations=[];
-  const snapshot=transition?.snapshot;
+  let width=0,height=0,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false,turning=Boolean(transition);
   const edges=[{offset:1,label:'Halaman berikutnya — ketuk tepi kiri'},{offset:-1,label:'Halaman sebelumnya — ketuk tepi kanan'}].map(({offset,label})=>{
     const button=document.createElement('button');button.type='button';button.className='mushaf-edge';button.dataset.pageTurn=String(offset);button.setAttribute('aria-label',label);button.title=label;viewport.insertBefore(button,stage);return button;
   });
-  if(snapshot){snapshot.classList.add('mushaf-outgoing');viewport.append(snapshot);stage.style.visibility='hidden';viewport.dataset.turning='true';viewport.setAttribute('aria-busy','true');}
   const host=stage.querySelector('.mushaf-artwork-host'),zoomBar=shell.querySelector('.page-zoom');
   const focusToggle=shell.querySelector('[data-page-focus="toggle"]');
   function syncClearDisplay(){document.body.classList.toggle('page-clear',clearDisplay);focusToggle.setAttribute('aria-pressed',String(clearDisplay));focusToggle.setAttribute('aria-label',clearDisplay?'Keluar layar bersih':'Aktifkan layar bersih');focusToggle.title=clearDisplay?'Tampilkan header':'Layar bersih';}
@@ -55,23 +53,12 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
   }
   function schedule(){cancelAnimationFrame(frame);frame=requestAnimationFrame(layout)}
   function finishTurn(){
-    snapshot?.remove();for(const animation of animations)animation.cancel();animations=[];
-    stage.style.visibility='';turning=false;delete viewport.dataset.turning;viewport.removeAttribute('aria-busy');
+    turning=false;delete viewport.dataset.turning;viewport.removeAttribute('aria-busy');
     if(!disposed){layout();viewport.dataset.ready='true';if(transition?.restoreFocus)viewport.focus({preventScroll:true});}
   }
-  async function revealPage(){
-    stage.style.visibility='';
-    if(!snapshot||matchMedia('(prefers-reduced-motion: reduce)').matches||!stage.animate){finishTurn();return;}
-    const direction=transition.offset,base=stage.style.transform,options={duration:320,easing:'cubic-bezier(.22,.61,.36,1)',fill:'both'};
-    animations=[
-      stage.animate([{transform:base+` translateX(${-direction*PAGE_WIDTH*.2}px)`},{transform:base}],options),
-      snapshot.animate([{transform:snapshot.style.transform,opacity:1,offset:0},{transform:base+` translateX(${direction*PAGE_WIDTH*.95}px)`,opacity:1,offset:.9},{transform:base+` translateX(${direction*PAGE_WIDTH*1.05}px)`,opacity:0,offset:1}],options)
-    ];
-    await Promise.allSettled(animations.map(animation=>animation.finished));if(!disposed)finishTurn();
-  }
   const resize=new ResizeObserver(schedule);resize.observe(viewport);
-  mountMushafArtwork(host,page,{signal,prepared:transition?.artwork,onReady:()=>{if(disposed)return;fontReady=true;host.setAttribute('aria-busy','false');layout();onReady();revealPage();},onError:error=>{
-    snapshot?.remove();stage.style.visibility='';turning=false;delete viewport.dataset.turning;viewport.removeAttribute('aria-busy');transform();
+  mountMushafArtwork(host,page,{signal,prepared:transition?.artwork,onReady:()=>{if(disposed)return;fontReady=true;host.setAttribute('aria-busy','false');layout();onReady();finishTurn();},onError:error=>{
+    turning=false;delete viewport.dataset.turning;viewport.removeAttribute('aria-busy');transform();
     host.setAttribute('aria-busy','false');viewport.dataset.error='true';
     const box=document.createElement('div');box.className='mushaf-error';
     const title=document.createElement('strong');title.textContent=navigator.onLine?'Halaman belum dapat dibuka':'Halaman ini belum tersimpan';
@@ -89,9 +76,7 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     turning=true;clearTimeout(tapTimer);session.lastTap=0;viewport.dataset.turning='true';viewport.setAttribute('aria-busy','true');transform();
     try{
       const artwork=await loadMushafSVG(next,signal);if(disposed)return;
-      const copy=fontReady&&!matchMedia('(prefers-reduced-motion: reduce)').matches?stage.cloneNode(true):null;
-      if(copy){copy.setAttribute('aria-hidden','true');copy.inert=true;copy.querySelectorAll('.page-ayah').forEach(n=>n.remove());copy.querySelectorAll('[id]').forEach(n=>n.removeAttribute('id'));}
-      pendingTurn={to:next,offset,artwork,snapshot:copy,restoreFocus:viewport.contains(document.activeElement)};onTurn(next);
+      pendingTurn={to:next,artwork,restoreFocus:viewport.contains(document.activeElement)};onTurn(next);
     }catch(error){if(!disposed&&error.name!=='AbortError'){pendingTurn=null;onTurn(next);}}
   }
   const pinchInfo=()=>{const [a,b]=[...pointers.values()];return {x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.hypot(a.x-b.x,a.y-b.y)}};
@@ -143,5 +128,5 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
   },{signal});
   // In zoom mode, following audio pans the page instead of scrolling the body.
   focusVerse=node=>{if(!node||session.zoom<=1.01)return;const r=node.getBoundingClientRect(),v=viewport.getBoundingClientRect();if(r.top<v.top||r.bottom>v.bottom){session.y+=v.top+height/2-(r.top+r.bottom)/2;transform();}};
-  cleanup=()=>{disposed=true;abort.abort();resize.disconnect();cancelAnimationFrame(frame);clearTimeout(tapTimer);snapshot?.remove();for(const animation of animations)animation.cancel();edges.forEach(edge=>edge.remove());};
+  cleanup=()=>{disposed=true;abort.abort();resize.disconnect();cancelAnimationFrame(frame);clearTimeout(tapTimer);edges.forEach(edge=>edge.remove());};
 }

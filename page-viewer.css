@@ -19,8 +19,6 @@ body.page-reading .workspace,body.page-reading main{height:100%;min-height:0}
 .mushaf-viewport:active{cursor:grabbing}
 .mushaf-stage{position:absolute;top:0;left:0;width:720px;height:1080px;transform-origin:0 0;will-change:transform;pointer-events:none}
 .mushaf-error{pointer-events:auto}
-.mushaf-outgoing{z-index:2;pointer-events:none}
-.mushaf-outgoing .mushaf-sheet{box-shadow:0 8px 35px #173f3533}
 .mushaf-edge{position:absolute;z-index:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;cursor:pointer}
 .mushaf-edge:disabled{cursor:default}
 .mushaf-edge:focus-visible{z-index:3;outline:2px solid #927536;outline-offset:-4px;background:#c4a44c14}

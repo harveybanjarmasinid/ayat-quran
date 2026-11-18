@@ -2,9 +2,9 @@
 .clear-display-toggle svg:last-child{display:none}
 .clear-display-toggle[aria-pressed=true] svg:first-child{display:none}
 .clear-display-toggle[aria-pressed=true] svg:last-child{display:block}
-body.page-clear .reader-navigation{display:none}
-/* Preserve the white toolbar and toggle position in both display states. */
-body.page-clear .reader-playback-bar .reader-play-context,body.page-clear .reader-playback-bar .page-zoom{visibility:hidden;pointer-events:none}
+body.page-clear .reader-playback-bar,body.page-clear .reader-navigation{display:none}
+.reader-bar .clear-display-return{display:none}
+body.page-clear .reader-bar .clear-display-return{display:grid;background:#ffffff1a}
 .reader-navigation{min-width:0;background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .reader-strip{display:flex;gap:3px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:0 10px;max-width:100%;touch-action:pan-x pan-y}
 .reader-strip[hidden]{display:none}.reader-strip::-webkit-scrollbar{display:none}

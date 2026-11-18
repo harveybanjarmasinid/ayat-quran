@@ -18,11 +18,12 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     const button=document.createElement('button');button.type='button';button.className='mushaf-edge';button.dataset.pageTurn=String(offset);button.setAttribute('aria-label',label);button.title=label;viewport.insertBefore(button,stage);return button;
   });
   const host=stage.querySelector('.mushaf-artwork-host'),zoomBar=shell.querySelector('.page-zoom');
-  const focusToggle=shell.querySelector('[data-page-focus="toggle"]');
-  function syncClearDisplay(){document.body.classList.toggle('page-clear',clearDisplay);focusToggle.setAttribute('aria-pressed',String(clearDisplay));focusToggle.setAttribute('aria-label',clearDisplay?'Keluar layar bersih':'Aktifkan layar bersih');focusToggle.title=clearDisplay?'Tampilkan kontrol':'Layar bersih';}
-  function setClearDisplay(value){if(turning)return;clearDisplay=value;session.zoom=1;session.x=0;session.y=0;session.lastTap=0;syncClearDisplay();layout();focusToggle.focus({preventScroll:true});}
+  const focusToggles=[...shell.querySelectorAll('[data-page-focus="toggle"]')];
+  const visibleFocusToggle=()=>focusToggles.find(button=>button.getClientRects().length);
+  function syncClearDisplay(){document.body.classList.toggle('page-clear',clearDisplay);for(const button of focusToggles){button.setAttribute('aria-pressed',String(clearDisplay));button.setAttribute('aria-label',clearDisplay?'Keluar layar bersih':'Aktifkan layar bersih');button.title=clearDisplay?'Tampilkan kontrol':'Layar bersih';}}
+  function setClearDisplay(value){if(turning)return;clearDisplay=value;session.zoom=1;session.x=0;session.y=0;session.lastTap=0;syncClearDisplay();layout();visibleFocusToggle()?.focus({preventScroll:true});}
   syncClearDisplay();
-  focusToggle.addEventListener('click',()=>setClearDisplay(!clearDisplay),{signal});
+  for(const button of focusToggles)button.addEventListener('click',()=>setClearDisplay(!clearDisplay),{signal});
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&clearDisplay&&!document.querySelector('dialog[open]')){e.preventDefault();setClearDisplay(false);}},{signal});
   function transform(){
     const scale=fit*session.zoom,limitX=Math.max(0,(PAGE_WIDTH*scale-width)/2),limitY=Math.max(0,(PAGE_HEIGHT*scale-height)/2);

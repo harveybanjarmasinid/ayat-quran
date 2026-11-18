@@ -38,7 +38,6 @@ body.page-reading .workspace,body.page-reading main{height:100%;min-height:0}
 .page-zoom [data-zoom=reset]{font-size:9px;min-width:44px}
 .page-zoom button:hover{background:#ffffff15}
 /* Keep all controls reachable on narrow phones without squeezing the title. */
-@media(max-width:360px){.mode-page .reader-bar{display:grid;grid-template-columns:32px minmax(0,1fr) auto;row-gap:0;padding-block:4px;padding-top:calc(4px + env(safe-area-inset-top))}.mode-page .reader-bar h1{grid-column:2;grid-row:1}.mode-page .reader-tools{grid-column:3;grid-row:1}.reader-page-controls{grid-column:2/4;grid-row:2;justify-self:end}.mode-page .reader-bar>a{grid-column:1;grid-row:1}}
 @media(max-height:500px) and (max-width:1000px){body.reading .sidebar{display:none}body.reading .workspace{margin:0;padding:0;max-width:none}.mode-page .reader-bar h1{white-space:nowrap}}
 body.page-reading .mode-page .page-selection{position:static;flex:0 0 auto;max-width:none;width:100%;margin:0;padding:7px 15px;min-height:52px;box-shadow:none;border-bottom:0;gap:6px}
 .mode-page .page-selection>div:first-child{font-size:11px;line-height:1.5}

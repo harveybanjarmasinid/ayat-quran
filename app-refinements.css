@@ -114,6 +114,11 @@ body #dialog #player .player-options .on{background:#ffffff20;color:#e7d899}
 .directory-heading{display:flex;align-items:center;gap:12px;margin-bottom:20px}
 .directory-heading h1{font-size:25px;margin:0}.directory-heading p{font-size:12px;color:var(--muted);margin:4px 0 0}
 .directory-heading .icon-btn{flex-shrink:0}
+.surah-directory{background:var(--bg)}
+.directory-content{padding:14px 12px 20px}
+.surah-directory .directory-search{width:100%;max-width:none;margin:0;padding:10px 12px;min-height:42px}
+.directory-search input{font-size:12px}
+.directory-content .search-count{margin:14px 0}
 .surah-directory>.search,dialog[data-panel=search] .search{width:100%;max-width:none}
 .search-count{font-size:11px;color:var(--muted);margin:15px 0 12px}
 .search-results{display:grid;gap:8px}

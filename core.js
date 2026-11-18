@@ -15,7 +15,7 @@ export function parseRoute(hash,surahs,pages=[]){
     const selected=isValidPosition(position,surahs)&&pageForPosition(pages,position.surah,position.ayah)===page.id?position:page;
     return {surah:selected.surah,ayah:selected.ayah,page:page.id};
   }
-  const m=hash.match(/^#read\/(\d+)(?:\/(\d+))?$/);
+  const m=hash.match(/^#(?:read|surah)\/(\d+)(?:\/(\d+))?$/);
   if(!m)return null;
   const surah=surahs.find(s=>s.id===Number(m[1]));
   if(!surah)return null;

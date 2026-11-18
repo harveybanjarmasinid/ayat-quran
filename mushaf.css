@@ -1,33 +1,19 @@
 /* Original vector artwork: no text fitting or line reflow. */
-.mode-page .reading-modes{gap:8px;padding-inline:8px}
-.mode-page .reading-modes [data-action="reading-mode"]{flex:1;min-width:0;padding-inline:8px}
-.mode-page .reading-modes .clear-display-toggle{flex:0 0 36px;justify-content:center;padding:6px;border-bottom:0;color:var(--green)}
 .clear-display-toggle svg:last-child{display:none}
 .clear-display-toggle[aria-pressed=true] svg:first-child{display:none}
 .clear-display-toggle[aria-pressed=true] svg:last-child{display:block}
-.mode-page .reading-modes .clear-display-toggle[aria-pressed=true]{background:var(--soft);border-radius:8px}
 body.page-clear .sidebar{display:none}
 body.page-clear .workspace{margin:0;padding:0;max-width:none}
 body.page-clear .reader-bar{display:none}
-body.page-clear .reading-modes{padding-top:env(safe-area-inset-top)}
+body.page-clear .reader-playback-bar{padding-top:calc(6px + env(safe-area-inset-top))}
 .reader-navigation{min-width:0;background:var(--bg);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-.reader-navigation-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:7px 10px 3px}
-.reader-nav-tabs{display:flex;flex:0 1 218px;min-width:0;gap:3px;width:218px;margin:0;padding:3px;border:1px solid #dfe7dc;border-radius:11px;background:#eaf0e7;box-shadow:inset 0 1px 2px #173f3505}
-.reader-nav-tabs button{display:flex;align-items:center;justify-content:center;gap:5px;flex:1;min-width:0;min-height:32px;padding:5px 7px;border:0;border-radius:8px;font:600 11px/1.4 Jakarta,Arial,sans-serif;color:#627463;transition:background .18s,color .18s,box-shadow .18s}
-.reader-nav-tabs button>svg{width:14px;height:14px;flex-shrink:0;stroke-width:1.7}
-.reader-nav-tabs button>small{display:grid;place-items:center;min-width:21px;height:18px;padding:0 4px;border-radius:5px;background:#dbe5d7;color:#627463;font-size:9px;font-weight:600;font-variant-numeric:tabular-nums}
-.reader-nav-tabs button:hover{background:#dfe9dc;color:#244e3c}
-.reader-nav-tabs button[aria-selected=true]{color:#fff;background:#1b5946;box-shadow:0 2px 5px #173f3524}
-.reader-nav-tabs button[aria-selected=true]>svg{color:#e7dbaa}
-.reader-nav-tabs button[aria-selected=true]>small{background:#ffffff19;color:#e4eddc}
-.reader-nav-tabs button:focus-visible{outline:2px solid #aa8b40;outline-offset:2px}
-.dark .reader-nav-tabs{background:#1c3027;border-color:#354b3b;box-shadow:none}
-.dark .reader-nav-tabs button{color:#b8c9b8}.dark .reader-nav-tabs button:hover{background:#2b4435;color:#f0f4e9}
-.dark .reader-nav-tabs button>small{background:#304839;color:#c1d1bd}
-.dark .reader-nav-tabs button[aria-selected=true]{background:#39765d;color:#fff}
-.dark .reader-nav-tabs button[aria-selected=true]>small{background:#ffffff19;color:#f0f4e9}
 .reader-strip{display:flex;gap:3px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:0 10px;max-width:100%;touch-action:pan-x pan-y}
 .reader-strip[hidden]{display:none}.reader-strip::-webkit-scrollbar{display:none}
+.reader-playback-bar{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;padding:6px 10px;min-height:56px;background:var(--surface)}
+.reader-playback-bar .reader-play-context{grid-column:2;justify-self:center;width:132px;min-height:40px;font-size:12px}
+.reader-playback-bar .clear-display-toggle{grid-column:3;grid-row:1;display:grid;place-items:center;width:44px;height:44px;padding:11px;border-radius:9px;color:var(--green)}
+.reader-playback-bar .clear-display-toggle[aria-pressed=true]{background:var(--soft)}
+.reader-playback-bar .clear-display-toggle svg{width:20px;height:20px}
 .reader-play-context{display:flex;align-items:center;justify-content:center;flex:0 0 auto;gap:5px;min-height:36px;min-width:96px;padding:6px 10px;border-radius:9px;background:var(--soft);color:var(--green);font:600 10px/1.4 Jakarta,Arial,sans-serif;white-space:nowrap}
 .reader-play-context>svg{width:14px;height:14px}
 .reader-play-context.is-playing{background:var(--green);color:var(--surface)}
@@ -54,6 +40,12 @@ body.page-clear .reading-modes{padding-top:env(safe-area-inset-top)}
 .mushaf-download progress{width:100%;height:7px;accent-color:var(--green);display:block;margin:12px 0}
 .mushaf-download small{display:block;font-size:11px;color:var(--muted);margin-top:9px}.mushaf-download .download-error{color:#ad432e}
 .home-heading-actions{display:flex;align-items:center;gap:4px}.home-heading-actions .icon-btn{color:var(--green);min-width:44px;min-height:44px}
-@media(max-width:360px){.reader-nav-tabs button>small{display:none}}
-@media(max-height:500px){.reader-navigation-head{padding-block:3px}.reader-nav-tabs button{padding-block:4px}.reader-strip button{min-height:32px;padding-block:3px}}
-@media(prefers-reduced-motion:reduce){.reader-nav-tabs button{transition:none}}
+
+/* Equal top-bar height keeps playback in the same place in all three readers. */
+.reader-shell .reader-bar{min-height:56px;margin:0;border-radius:0;padding:calc(6px + env(safe-area-inset-top)) 8px 6px;gap:4px}
+.reader-shell .reader-bar h1{font-size:13px;min-width:0;line-height:1.4}
+.reader-shell .reader-bar .icon-btn{width:32px;min-width:32px;height:36px;min-height:36px;padding:7px}
+.reader-shell .reader-bar .icon-btn svg{width:18px;height:18px}
+.reader-shell .reader-sticky{top:0}
+@media(max-width:360px){.reader-shell .reader-bar{min-height:84px;align-content:start}.reader-shell.mode-ayah .reader-bar{align-items:flex-start}.reader-shell.mode-ayah .reader-bar h1{padding-top:8px}}
+@media(max-height:500px){.reader-playback-bar{padding-block:2px;min-height:48px}}

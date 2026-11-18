@@ -90,3 +90,40 @@ body #dialog #player .player-options .on{background:#ffffff20;color:#e7d899}
 .mode-ayah .surah-banner p{font-size:11px;color:#746342;margin:0}
 .dark .mode-ayah .surah-banner{background:linear-gradient(110deg,#4a4931,#383d2b);border-color:#626341;color:#e5d8a3}.dark .surah-banner .arabic-title,.dark .mode-ayah .surah-banner p{color:#e6ddba}
 @media(max-width:700px){main{padding-top:17px}.topbar{height:64px}.home-heading{margin-bottom:12px}.home-heading h1{font-size:24px}.resume-reading{min-height:64px;padding:11px 14px;margin-bottom:14px}.home-library .search{padding:11px 13px}.home-library .list-toolbar{margin-top:9px;margin-bottom:11px}.home-library .surah-card{min-height:74px;padding:12px 16px}.mode-ayah .reading-options{padding:10px 14px}.mode-ayah .jump{padding:4px 15px 10px}.mode-ayah #verses{padding-inline:8px}.mode-ayah .ayah{padding:13px 14px 7px;column-gap:9px}.mode-ayah .ayah.saved{padding-left:12px}.mode-ayah .ayah .arabic{line-height:1.85}.mode-ayah .reader-header.surah-banner{margin-inline:8px}dialog[data-panel=audio],dialog[data-panel=verse]{position:fixed;inset:auto 0 0;margin:0;width:100%;max-width:none;max-height:88dvh;border-radius:20px 20px 0 0;padding:22px 22px calc(22px + env(safe-area-inset-bottom))}}
+
+/* Home entry points and search live outside the reading toolbar. */
+.top-actions>.top-search{display:grid;place-items:center;width:40px;height:40px;color:var(--green)}
+.home-heading{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:8px;row-gap:2px;align-items:center}
+.home-heading h1{grid-column:1;grid-row:1;white-space:nowrap}
+.home-heading .connection{grid-column:2;grid-row:1;justify-self:end;font-size:10px;white-space:nowrap}
+.home-heading>p{grid-column:1;grid-row:2;align-self:start;padding-top:4px}
+.home-heading .home-heading-actions{grid-column:2;grid-row:2;gap:8px;align-items:start}
+.home-action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:68px;min-height:48px;padding:4px 0;border-radius:8px;color:var(--green)}
+.home-action svg{width:21px;height:21px}
+.home-action span{font-size:10px;font-weight:500;white-space:nowrap;line-height:1.5}
+.home-action:hover{background:var(--soft)}
+.reading-shortcuts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 16px}
+.reading-shortcuts>a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px 5px;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:center;min-width:0;color:var(--green)}
+.reading-shortcuts>a:hover{background:var(--soft);border-color:#b7c9b3}
+.shortcut-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--soft);color:var(--green)}
+.shortcut-icon svg{width:20px;height:20px;stroke-width:1.6}
+.reading-shortcuts>a>span:last-child{font-size:10px;color:var(--muted);line-height:1.5}
+.reading-shortcuts strong{display:block;font-size:12px;font-weight:600;color:var(--ink)}
+.home-library .list-toolbar{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;padding:0 3px 10px;border-bottom:1px solid var(--line);min-height:36px}
+.home-library h2{font-size:14px;font-weight:650;margin:0;color:var(--green)}
+.directory-heading{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.directory-heading h1{font-size:25px;margin:0}.directory-heading p{font-size:12px;color:var(--muted);margin:4px 0 0}
+.directory-heading .icon-btn{flex-shrink:0}
+.surah-directory>.search,dialog[data-panel=search] .search{width:100%;max-width:none}
+.search-count{font-size:11px;color:var(--muted);margin:15px 0 12px}
+.search-results{display:grid;gap:8px}
+.search-results .surah-card{min-height:76px;padding:12px;gap:14px}
+.search-results .surah-arabic small{display:none}
+.search-results .surah-arabic b{font-size:23px}
+.search-results .surah-info{min-width:0}
+.search-results .surah-info p{font-size:10px}
+#dialog[data-panel=search]{padding:0 20px 20px;scroll-padding-top:140px}
+#dialog[data-panel=search] .dialog-head{position:sticky;top:0;background:var(--surface);margin:0 -1px;padding:18px 0 12px;z-index:3}
+#dialog[data-panel=search] .search{position:sticky;top:70px;z-index:2;background:var(--surface)}
+@media(max-width:360px){.home-heading h1{font-size:21px}.home-heading .connection{font-size:9px}.home-heading .home-heading-actions{gap:5px}.home-action{min-width:63px}.home-action span{font-size:9px}.reading-shortcuts{gap:7px}.reading-shortcuts strong{font-size:11px}.home-library .surah-card{gap:12px}.home-library .surah-info p{font-size:10px}}
+@media(max-width:700px) and (max-height:650px){.topbar{height:56px}main{padding-top:12px}.home-heading{margin-bottom:8px}.home-action{min-height:44px}.resume-reading{min-height:58px;margin-bottom:10px}.reading-shortcuts{margin-bottom:12px}.reading-shortcuts>a{padding:8px 4px;gap:4px}.shortcut-icon{width:26px;height:26px;border-radius:8px}.shortcut-icon svg{width:17px;height:17px}.home-library .list-toolbar{min-height:30px;margin-bottom:8px;padding-bottom:7px}}

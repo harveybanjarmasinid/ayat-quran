@@ -1,26 +1,28 @@
 // Publisher-derived outlines keep every line and verse in its printed position.
 import {mountMushafArtwork,loadMushafSVG} from './mushaf.js';
+import {mountPageHighlighter} from './page-highlighter.js';
 const PAGE_WIDTH=720,PAGE_HEIGHT=1080,MAX_ZOOM=4;
 let session={page:null,zoom:1,x:0,y:0,lastTap:0},clearDisplay=false,cleanup=()=>{},focusVerse=()=>{},pendingTurn=null;
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 export function disposePageViewer(nextPage=null){cleanup();cleanup=()=>{};focusVerse=()=>{};if(pendingTurn?.to!==nextPage)pendingTurn=null;document.body.classList.remove('page-clear');}
 export function followPageVerse(node){focusVerse(node)}
 
-export function mountPageViewer(page,onTurn,onReady=()=>{}){
+export function mountPageViewer(page,onTurn,onReady=()=>{},inkOptions={}){
   const viewport=document.querySelector('.mushaf-viewport'),stage=document.querySelector('.mushaf-stage'),shell=document.querySelector('.mode-page');
   if(!viewport||!stage)return;
   const transition=pendingTurn?.to===page?pendingTurn:null;pendingTurn=null;
   viewport.dataset.page=String(page);
   if(session.page!==page)session={page,zoom:1,x:0,y:0,lastTap:0};
   const abort=new AbortController(),signal=abort.signal,pointers=new Map();
-  let width=0,height=0,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,gesture=null,pinch=null,fontReady=false,turning=Boolean(transition);
+  let width=0,height=0,fit=1,frame=0,tapTimer,disposed=false,suppressClickUntil=0,nativeTapUntil=0,gesture=null,pinch=null,fontReady=false,turning=Boolean(transition);
   const edges=[{offset:1,label:'Halaman berikutnya — ketuk tepi kiri'},{offset:-1,label:'Halaman sebelumnya — ketuk tepi kanan'}].map(({offset,label})=>{
     const button=document.createElement('button');button.type='button';button.className='mushaf-edge';button.dataset.pageTurn=String(offset);button.setAttribute('aria-label',label);button.title=label;viewport.insertBefore(button,stage);return button;
   });
   const host=stage.querySelector('.mushaf-artwork-host'),zoomBar=shell.querySelector('.page-zoom');
+  const ink=mountPageHighlighter({shell,viewport,stage,host,signal,initial:inkOptions.strokes,save:inkOptions.save,notify:inkOptions.notify,canDraw:()=>fontReady&&!turning});
   const focusToggle=shell.querySelector('[data-page-focus="toggle"]');
   function syncClearDisplay(){document.body.classList.toggle('page-clear',clearDisplay);focusToggle.setAttribute('aria-pressed',String(clearDisplay));focusToggle.setAttribute('aria-label',clearDisplay?'Keluar layar bersih':'Aktifkan layar bersih');focusToggle.title=clearDisplay?'Tampilkan kontrol':'Layar bersih';}
-  function setClearDisplay(value){if(turning)return;clearDisplay=value;session.zoom=1;session.x=0;session.y=0;session.lastTap=0;syncClearDisplay();layout();focusToggle.focus({preventScroll:true});}
+  function setClearDisplay(value){if(turning)return;ink.setEnabled(false);clearDisplay=value;session.zoom=1;session.x=0;session.y=0;session.lastTap=0;syncClearDisplay();layout();focusToggle.focus({preventScroll:true});}
   syncClearDisplay();
   focusToggle.addEventListener('click',()=>setClearDisplay(!clearDisplay),{signal});
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&clearDisplay&&!document.querySelector('dialog[open]')){e.preventDefault();setClearDisplay(false);}},{signal});
@@ -58,7 +60,7 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     if(!disposed){layout();viewport.dataset.ready='true';if(transition?.restoreFocus)viewport.focus({preventScroll:true});}
   }
   const resize=new ResizeObserver(schedule);resize.observe(viewport);
-  mountMushafArtwork(host,page,{signal,prepared:transition?.artwork,onReady:()=>{if(disposed)return;fontReady=true;host.setAttribute('aria-busy','false');layout();onReady();finishTurn();},onError:error=>{
+  mountMushafArtwork(host,page,{signal,prepared:transition?.artwork,onReady:()=>{if(disposed)return;fontReady=true;host.setAttribute('aria-busy','false');layout();ink.setReady();onReady();finishTurn();},onError:error=>{
     turning=false;delete viewport.dataset.turning;viewport.removeAttribute('aria-busy');transform();
     host.setAttribute('aria-busy','false');viewport.dataset.error='true';
     const box=document.createElement('div');box.className='mushaf-error';
@@ -87,7 +89,7 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
     clearTimeout(tapTimer);
     if(e.pointerType==='mouse'&&e.button!==0)return;
     const point=local(e);pointers.set(e.pointerId,point);e.target.setPointerCapture(e.pointerId);
-    if(pointers.size===1)gesture={start:point,previous:point,moved:false,multiple:false,zoom:session.zoom};
+    if(pointers.size===1)gesture={start:point,previous:point,moved:false,multiple:false,zoom:session.zoom,target:e.target.closest('.page-ayah,[data-page-turn]')};
     if(pointers.size===2){pinch=pinchInfo();gesture.multiple=true;suppressClickUntil=Date.now()+800;}
   },{signal});
   viewport.addEventListener('pointermove',e=>{
@@ -107,13 +109,18 @@ export function mountPageViewer(page,onTurn,onReady=()=>{}){
       const dx=point.x-gesture.start.x,dy=point.y-gesture.start.y;
       if(gesture.multiple||gesture.moved)suppressClickUntil=Date.now()+800;
       if(!gesture.multiple&&gesture.zoom<=1.01&&Math.abs(dx)>50&&Math.abs(dx)>Math.abs(dy)*1.4){session.lastTap=0;turnPage(dx>0?1:-1);}
-      else if(!gesture.multiple&&!gesture.moved){const now=Date.now();if(now-session.lastTap<300&&Math.hypot(point.x-(session.tapX||0),point.y-(session.tapY||0))<35){suppressClickUntil=now+800;setZoom(session.zoom>1.01?1:2,point);session.lastTap=0;}else{session.lastTap=now;session.tapX=point.x;session.tapY=point.y;}}
+      else if(!gesture.multiple&&!gesture.moved){const now=Date.now();if(now-session.lastTap<300&&Math.hypot(point.x-(session.tapX||0),point.y-(session.tapY||0))<35){suppressClickUntil=now+800;setZoom(session.zoom>1.01?1:2,point);session.lastTap=0;}else{
+        session.lastTap=now;session.tapX=point.x;session.tapY=point.y;
+        // Handle a completed finger/pen tap directly; native click synthesis
+        // varies after captured drawing gestures. Keep the double-tap delay.
+        if(e.pointerType!=='mouse'&&gesture.target){const target=gesture.target;nativeTapUntil=now+800;tapTimer=setTimeout(()=>{if(!disposed&&target.isConnected)target.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:0}));},310);}
+      }}
     }
     gesture=null;pinch=null;
   }
   viewport.addEventListener('pointerup',pointerEnd,{signal});viewport.addEventListener('pointercancel',pointerEnd,{signal});
   viewport.addEventListener('click',e=>{
-    if(turning||Date.now()<suppressClickUntil){e.preventDefault();e.stopImmediatePropagation();return;}
+    if(turning||Date.now()<suppressClickUntil||(e.detail>0&&Date.now()<nativeTapUntil)){e.preventDefault();e.stopImmediatePropagation();return;}
     const edge=e.target.closest('[data-page-turn]');
     if(edge){e.preventDefault();e.stopImmediatePropagation();if(edge.disabled||session.zoom>1.01)return;clearTimeout(tapTimer);if(e.detail===0)turnPage(Number(edge.dataset.pageTurn));else tapTimer=setTimeout(()=>turnPage(Number(edge.dataset.pageTurn)),310);return;}
     const verse=e.target.closest('.page-ayah');if(verse&&e.detail>0){e.preventDefault();e.stopImmediatePropagation();clearTimeout(tapTimer);tapTimer=setTimeout(()=>{if(!disposed&&verse.isConnected)verse.dispatchEvent(new MouseEvent('click',{bubbles:true,detail:0}));},310);}

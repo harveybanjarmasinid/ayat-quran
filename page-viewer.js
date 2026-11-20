@@ -2,14 +2,15 @@
 import {mountMushafArtwork,loadMushafSVG} from './mushaf.js';
 import {mountPageHighlighter} from './page-highlighter.js';
 const PAGE_WIDTH=720,PAGE_HEIGHT=1080,MAX_ZOOM=4;
-let session={page:null,zoom:1,x:0,y:0,lastTap:0},clearDisplay=false,cleanup=()=>{},focusVerse=()=>{},pendingTurn=null;
+let session={page:null,zoom:1,x:0,y:0,lastTap:0},cleanup=()=>{},focusVerse=()=>{},pendingTurn=null;
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
 export function disposePageViewer(nextPage=null){cleanup();cleanup=()=>{};focusVerse=()=>{};if(pendingTurn?.to!==nextPage)pendingTurn=null;document.body.classList.remove('page-clear');}
 export function followPageVerse(node){focusVerse(node)}
 
-export function mountPageViewer(page,onTurn,onReady=()=>{},inkOptions={}){
+export function mountPageViewer(page,onTurn,onReady=()=>{},options={}){
   const viewport=document.querySelector('.mushaf-viewport'),stage=document.querySelector('.mushaf-stage'),shell=document.querySelector('.mode-page');
   if(!viewport||!stage)return;
+  let clearDisplay=options.clearDisplay===true;
   const transition=pendingTurn?.to===page?pendingTurn:null;pendingTurn=null;
   viewport.dataset.page=String(page);
   if(session.page!==page)session={page,zoom:1,x:0,y:0,lastTap:0};
@@ -19,10 +20,22 @@ export function mountPageViewer(page,onTurn,onReady=()=>{},inkOptions={}){
     const button=document.createElement('button');button.type='button';button.className='mushaf-edge';button.dataset.pageTurn=String(offset);button.setAttribute('aria-label',label);button.title=label;viewport.insertBefore(button,stage);return button;
   });
   const host=stage.querySelector('.mushaf-artwork-host'),zoomBar=shell.querySelector('.page-zoom');
-  const ink=mountPageHighlighter({shell,viewport,stage,host,signal,initial:inkOptions.strokes,save:inkOptions.save,notify:inkOptions.notify,canDraw:()=>fontReady&&!turning});
+  const ink=mountPageHighlighter({shell,viewport,stage,host,signal,initial:options.strokes,save:options.save,notify:options.notify,canDraw:()=>fontReady&&!turning});
   const focusToggle=shell.querySelector('[data-page-focus="toggle"]');
   function syncClearDisplay(){document.body.classList.toggle('page-clear',clearDisplay);focusToggle.setAttribute('aria-pressed',String(clearDisplay));focusToggle.setAttribute('aria-label',clearDisplay?'Keluar layar bersih':'Aktifkan layar bersih');focusToggle.title=clearDisplay?'Tampilkan kontrol':'Layar bersih';}
-  function setClearDisplay(value){if(turning)return;ink.setEnabled(false);clearDisplay=value;session.zoom=1;session.x=0;session.y=0;session.lastTap=0;syncClearDisplay();layout();focusToggle.focus({preventScroll:true});}
+  function setClearDisplay(value){
+    if(turning)return;
+    ink.setEnabled(false);
+    clearDisplay=value;
+    session.zoom=1;
+    session.x=0;
+    session.y=0;
+    session.lastTap=0;
+    syncClearDisplay();
+    layout();
+    options.onClearDisplayChange?.(value);
+    focusToggle.focus({preventScroll:true});
+  }
   syncClearDisplay();
   focusToggle.addEventListener('click',()=>setClearDisplay(!clearDisplay),{signal});
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&clearDisplay&&!document.querySelector('dialog[open]')){e.preventDefault();setClearDisplay(false);}},{signal});

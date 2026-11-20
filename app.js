@@ -55,11 +55,26 @@ function currentPosition(){const r=currentRoute();if(!r||r.page)return r;const v
 function setNav(name){document.querySelectorAll('[data-nav]').forEach(n=>{if(n.dataset.nav===name)n.setAttribute('aria-current','page');else n.removeAttribute('aria-current')})}
 function dateMarkup(){const now=new Date();return `<div class="date"><strong>${esc(new Intl.DateTimeFormat('id-ID',{weekday:'long',day:'numeric',month:'short'}).format(now))}</strong>${esc(new Intl.DateTimeFormat('id-ID-u-ca-islamic',{day:'numeric',month:'long',year:'numeric'}).format(now))}</div>`;}
 const art=`<svg viewBox="0 0 330 235" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="stars" width="54" height="54" patternUnits="userSpaceOnUse"><path d="m27 1 7 17 18 9-18 7-7 19-8-19L1 27l18-9Z" fill="none" stroke="#d5dda8" stroke-width=".5" opacity=".26"/></pattern></defs><rect width="330" height="235" fill="url(#stars)"/><path d="m110 172 57-45 72 45-68 33Z" fill="#102e26" opacity=".5"/><path d="m125 201 89-75m-67 0 88 75" stroke="#b79d63" stroke-width="8" stroke-linecap="round"/><path d="M169 166c-17-24-42-38-76-39l23-71c28 2 48 16 65 43l18 66Z" fill="#e9ddba"/><path d="M169 166c24-12 51-15 81-9l21-71c-30-7-60-4-90 13Z" fill="#f3e8c9"/><path d="m169 166 12-67" stroke="#ad996b" stroke-width="2"/><path d="m116 69 57 36m-61-22 58 35m-63-20 60 33m-64-19 61 32m27-36 65-14m-67 27 64-14m-67 27 63-13m-65 25 60-12" stroke="#b8a578" stroke-width="2" opacity=".65"/><path d="m98 130 70 41 86-10" stroke="#d1bb86" fill="none" stroke-width="4" stroke-linecap="round"/><path d="m278 39 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z" fill="#dbc797" opacity=".75"/></svg>`;
+function resumeReadingTarget(){
+  const mode=state.settings.readingMode;
+  const last=state.lastRead;
+  if(mode==='page'){
+    const savedPage=data.pages.find(p=>p.id===state.lastPage);
+    if(savedPage)return {mode,surah:savedPage.surah,page:savedPage.id,hasResume:true};
+    const surah=last?.surah||1,ayah=last?.ayah||1;
+    return {mode,surah,ayah,page:pageForPosition(data.pages,surah,ayah),hasResume:Boolean(last)};
+  }
+  return {mode,surah:last?.surah||1,ayah:last?.ayah||1,hasResume:Boolean(last)};
+}
 function renderHome(){
   search='';
-  const last=state.lastRead,resumePage=state.settings.readingMode==='page'?data.pages.find(p=>p.id===state.lastPage):null,s=sBy(resumePage?.surah||last?.surah||1),hasResume=Boolean(resumePage||last),juzMode=state.settings.readingMode==='page'?'page':'ayah';
+  const last=state.lastRead,target=resumeReadingTarget(),s=sBy(target.surah);
+  const title=target.hasResume?'Lanjutkan membaca':'Mulai membaca';
+  const position=target.mode==='page'?`Halaman ${target.page}`:`Ayat ${target.ayah}`;
+  const modeLabel=target.mode==='page'?'Per Halaman':target.mode==='surah'?'Per Surah':'Per Ayat';
+  const juzMode=target.mode==='page'?'page':'ayah';
   main.innerHTML=`<div class="home-heading"><h1>Al-Qur’an</h1><p>114 surah · 30 juz</p><div class="home-heading-actions"><button class="home-action" data-action="install" aria-label="Pasang Aplikasi">${icon('download')}<span>Pasang Aplikasi</span></button><button class="home-action" data-action="audio-panel" aria-label="Dengarkan Audio">${icon('headphones')}<span>Dengarkan Audio</span></button></div></div>
-  <button class="resume-reading" data-action="continue" aria-label="${hasResume?'Lanjutkan membaca':'Baca Al-Fatihah'}"><span class="resume-icon">${icon(hasResume?'bookmark':'book')}</span><span><small>${hasResume?'LANJUTKAN MEMBACA':'MULAI MEMBACA'}</small><strong>${esc(s.name)} <span>· ${resumePage?'Halaman '+resumePage.id:'Ayat '+(last?.ayah||1)}</span></strong></span>${icon('arrow')}</button>
+  <button class="resume-reading" data-action="continue" aria-labelledby="resume-title" aria-describedby="resume-surah resume-details"><span class="resume-icon">${icon(target.hasResume?'bookmark':'book')}</span><span><small id="resume-title">${title}</small><strong id="resume-surah">${esc(s.name)}</strong><span class="resume-details" id="resume-details">${position} · ${modeLabel}</span></span>${icon('arrow')}</button>
   <nav class="reading-shortcuts" aria-label="Pilih cara membaca"><a href="${state.lastPage?'#page/'+state.lastPage:readingLink(last?.surah||1,last?.ayah||1,'page')}" aria-label="Qur’an Per Halaman"><span class="shortcut-icon"><img src="./icons/reading-page.png" width="32" height="32" alt="" decoding="async"></span><span>Qur’an<strong>Per Halaman</strong></span></a><a href="${readingLink(last?.surah||1,last?.ayah||1,'ayah')}" aria-label="Qur’an Per Ayat"><span class="shortcut-icon"><img src="./icons/reading-ayah.png" width="32" height="32" alt="" decoding="async"></span><span>Qur’an<strong>Per Ayat</strong></span></a><a href="#surahs" aria-label="Surah"><span class="shortcut-icon"><img src="./icons/reading-surah.png" width="32" height="32" alt="" decoding="async"></span><span>Daftar<strong>Surah</strong></span></a></nav>
   <section class="home-library" aria-label="Daftar Juz"><div class="list-toolbar"><h2>Juz</h2><span class="list-meta">30 juz</span></div><div class="surah-grid">${data.juzs.map(j=>`<a class="surah-card juz-card" href="${readingLink(j.surah,j.ayah,juzMode)}"><span class="number">${j.id}</span><div class="surah-info"><h3>Juz ${j.id}</h3><p>Mulai ${esc(sBy(j.surah).name)} · Ayat ${j.ayah}</p></div><span class="surah-arabic">${icon('arrow')}</span></a>`).join('')}</div><div class="section-foot">${icon('shield')}Teks Tanzil · Riwayat Hafs</div></section><div class="home-install"><button class="pill" data-action="install">${icon('download')}Pasang di layar utama</button></div>`;
   setConnection();
@@ -80,7 +95,16 @@ function renderReader(route){
   if(route.page)mountPageViewer(route.page,goPage,()=>{
     rememberOpenedPage(route.page);
     document.querySelectorAll('.page-ayah').forEach(n=>{const id=Number(n.dataset.surah),ayah=Number(n.dataset.ayah),selected=selectedPageAyah?.page===route.page&&selectedPageAyah.surah===id&&selectedPageAyah.ayah===ayah,saved=state.lastRead?.surah===id&&state.lastRead.ayah===ayah;n.classList.toggle('selected',selected);n.classList.toggle('saved',saved);n.setAttribute('aria-pressed',String(selected));n.setAttribute('aria-label',sBy(id).name+', ayat '+ayah+'. '+(saved?'Ditandai sebagai terakhir dibaca. ':'')+'Ketuk untuk dengarkan atau tandai.');});markPlaying();
-  },{strokes:state.pageHighlights[route.page]||[],save:strokes=>savePageHighlights(route.page,strokes),notify:toast});
+  },{
+    strokes:state.pageHighlights[route.page]||[],
+    save:strokes=>savePageHighlights(route.page,strokes),
+    notify:toast,
+    clearDisplay:state.settings.clearDisplay===true,
+    onClearDisplayChange(enabled){
+      state.settings.clearDisplay=enabled;
+      persist();
+    }
+  });
   else markPlaying();
   const token=location.hash;
   if(!route.page&&route.ayah>1)document.fonts.ready.then(()=>requestAnimationFrame(()=>{if(location.hash===token)el('ayah-'+route.ayah)?.scrollIntoView({block:'start',behavior:'instant'});}));
@@ -162,7 +186,12 @@ document.addEventListener('click',async event=>{
     case'play-sequence':playAyah(id,n,true,audioRange(data,'surah',id));break;
     case'play-scope':playScope(b.dataset.kind,Number(b.dataset.scopeId));break;
     case'translation':{const y=scrollY;state.settings.translation=!state.settings.translation;persist();render();scrollTo(0,y);if(dialog.open)showSettings();break;}
-    case'continue':if(state.settings.readingMode==='page'&&state.lastPage)goPage(state.lastPage);else goRead(state.lastRead?.surah||1,state.lastRead?.ayah||1);break;
+    case'continue':{
+      const target=resumeReadingTarget();
+      if(target.mode==='page'&&target.ayah===undefined)goPage(target.page);
+      else goRead(target.surah,target.ayah,target.mode);
+      break;
+    }
     case'settings':showSettings();break;case'sources':showSources();break;case'close-dialog':dialog.close();break;
     case'dark':state.settings.dark=!state.settings.dark;applySettings();persist();showSettings();break;
     case'latin':{const y=scrollY;state.settings.latin=!state.settings.latin;persist();render();scrollTo(0,y);if(dialog.open)showSettings();break;}

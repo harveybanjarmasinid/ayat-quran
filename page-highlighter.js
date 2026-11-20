@@ -53,6 +53,8 @@ export function mountPageHighlighter({shell,viewport,stage,host,signal,initial=[
   const toggle=shell.querySelector('[data-ink="toggle"]'),toolbar=shell.querySelector('.ink-toolbar'),undo=shell.querySelector('[data-ink="undo"]'),clear=shell.querySelector('[data-ink="clear"]'),status=shell.querySelector('.ink-status');
   const tools=[...shell.querySelectorAll('[data-ink-mode]')],originalLabel=viewport.getAttribute('aria-label'),history=[],down=new Set(),regions=new Map();
   let marks=validMarks(initial)?initial:[],enabled=false,ready=false,mode='mark',draft=null,pointer=null,lastPoint=null,suppressClickUntil=0,lines=[],cachedSelection=null;
+  let strokeVerse=null;
+  let pendingRowStart=null;
   const svg=name=>document.createElementNS('http://www.w3.org/2000/svg',name),layer=svg('svg'),defs=svg('defs'),saved=svg('g');
   layer.classList.add('mushaf-ink');layer.setAttribute('viewBox',`0 0 ${WIDTH} ${HEIGHT}`);layer.setAttribute('aria-hidden','true');layer.append(defs,saved);stage.append(layer);
   const textClip=svg('clipPath'),textRect=svg('rect');
@@ -101,32 +103,44 @@ export function mountPageHighlighter({shell,viewport,stage,host,signal,initial=[
     for(const button of tools)button.setAttribute('aria-pressed',String(button.dataset.inkMode===mode));viewport.classList.toggle('ink-erase',enabled&&mode==='erase');
   }
   function commit(next,message){if(!validMarks(next)){notify('Terlalu banyak bagian stabilo di halaman ini. Hapus sebagian sebelum menambah lagi.');render();return false;}if(!save(next)){render();return false;}history.push(marks);if(history.length>20)history.shift();marks=next;cachedSelection=null;status.textContent=message;render();return true;}
-  function finish(){if(!draft)return;const previous=serialize(selected()),next=serialize(draft);draft=null;pointer=null;lastPoint=null;if(JSON.stringify(next)!==JSON.stringify(previous))commit(next,mode==='erase'?'Bagian sorotan dihapus · bisa diurungkan':'Stabilo tersimpan');else render();}
-  function discard(){draft=null;pointer=null;lastPoint=null;render();}
+  function resetStroke(){draft=null;pointer=null;lastPoint=null;strokeVerse=null;pendingRowStart=null;}
+  function finish(){if(!draft)return;const previous=serialize(selected()),next=serialize(draft);resetStroke();if(JSON.stringify(next)!==JSON.stringify(previous))commit(next,mode==='erase'?'Bagian sorotan dihapus · bisa diurungkan':'Stabilo tersimpan');else render();}
+  function discard(){resetStroke();render();}
   function setEnabled(value){finish();enabled=Boolean(value&&ready);if(enabled)mode='mark';down.clear();suppressClickUntil=0;toolbar.hidden=!enabled;viewport.classList.toggle('ink-enabled',enabled);toggle.setAttribute('aria-pressed',String(enabled));toggle.setAttribute('aria-label',enabled?'Matikan stabilo':'Aktifkan stabilo');toggle.title=enabled?'Matikan stabilo':'Stabilo';status.textContent=hint();viewport.setAttribute('aria-label',enabled?'Stabilo aktif. Seret bagian teks untuk menandai. Pilih Penghapus untuk menghapus sebagian sorotan. Matikan pensil untuk kembali membaca.':originalLabel);render();}
   function point(e){const r=stage.getBoundingClientRect();return [(e.clientX-r.left)/r.width*WIDTH,(e.clientY-r.top)/r.height*HEIGHT];}
   function append(e){
     const p=point(e),row=textRow(p);
-    if(row<0||!hit(p)){lastPoint=null;return;}
-    const erase=mode==='erase',radius=erase?9:1.5;
-    if(lastPoint&&lastPoint.row!==row){
-      // Leave the previous row only once the finger reaches the new row,
-      // and never draw a connecting stroke through the gap.
-      const band=lines[row],inset=(band.bottom-band.top)*.15;
-      if(p[1]<band.top+inset||p[1]>band.bottom-inset)return;
+    if(row<0||hit(p)!==strokeVerse){
       lastPoint=null;
+      pendingRowStart=null;
+      return;
     }
-    walk(lastPoint?.point||p,p,sample=>apply(draft,sample,erase,radius));
-    lastPoint={point:p,row};
+    if(lastPoint?.row!==row){
+      // Crossing rows never paints a vertical trail. Wait for a horizontal
+      // movement on the new row before extending within the same verse.
+      if(pendingRowStart?.row!==row)pendingRowStart={row,point:p};
+      const [x,y]=pendingRowStart.point;
+      if(Math.abs(p[0]-x)<Math.max(6,Math.abs(p[1]-y)))return;
+      lastPoint=pendingRowStart;
+      pendingRowStart=null;
+    }
+    const erase=mode==='erase',radius=erase?9:1.5;
+    walk(lastPoint.point,p,sample=>{
+      if(textRow(sample)===row&&hit(sample)===strokeVerse)apply(draft,sample,erase,radius);
+    });
+    lastPoint={row,point:p};
   }
   const stop=e=>{if(e.type==='click')e.preventDefault();e.stopImmediatePropagation();};
   viewport.addEventListener('pointerdown',e=>{
     if(!enabled||!canDraw()||(e.pointerType==='mouse'&&e.button!==0))return;
     stop(e);down.add(e.pointerId);viewport.setPointerCapture(e.pointerId);
     if(down.size>1){discard();return;}
-    const start=point(e);
-    if(textRow(start)<0||!hit(start))return;
-    pointer=e.pointerId;draft=clone(selected());lastPoint=null;append(e);render();
+    const start=point(e),row=textRow(start),verse=hit(start);
+    if(row<0||!verse)return;
+    strokeVerse=verse;
+    pointer=e.pointerId;draft=clone(selected());
+    lastPoint={row,point:start};
+    append(e);render();
   },{capture:true,signal});
   viewport.addEventListener('pointermove',e=>{if(!down.has(e.pointerId))return;stop(e);if(pointer!==e.pointerId||!draft)return;const samples=e.getCoalescedEvents?.();for(const sample of samples?.length?samples:[e])append(sample);render();},{capture:true,signal});
   function end(e){

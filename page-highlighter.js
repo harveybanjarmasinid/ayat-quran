@@ -55,9 +55,20 @@ export function mountPageHighlighter({shell,viewport,stage,host,signal,initial=[
   let marks=validMarks(initial)?initial:[],enabled=false,ready=false,mode='mark',draft=null,pointer=null,lastPoint=null,suppressClickUntil=0,lines=[],cachedSelection=null;
   const svg=name=>document.createElementNS('http://www.w3.org/2000/svg',name),layer=svg('svg'),defs=svg('defs'),saved=svg('g');
   layer.classList.add('mushaf-ink');layer.setAttribute('viewBox',`0 0 ${WIDTH} ${HEIGHT}`);layer.setAttribute('aria-hidden','true');layer.append(defs,saved);stage.append(layer);
+  const textClip=svg('clipPath'),textRect=svg('rect');
+  textClip.id='ink-text-area';
+  textClip.append(textRect);
+  defs.append(textClip);
+  saved.setAttribute('clip-path','url(#ink-text-area)');
+  let textBounds;
   const hint=()=>mode==='erase'?'Seret bagian sorotan yang ingin dihapus':'Seret bagian teks yang ingin ditandai';
   function hit(point){for(const [key,r] of regions){const b=r.bounds;if(point[0]>=b.left&&point[0]<=b.right&&point[1]>=b.top&&point[1]<=b.bottom&&r.node.isPointInFill(new DOMPoint(...point).matrixTransform(r.inverse)))return key;}return null;}
   const rowAt=y=>lines.findIndex(l=>l.ink&&y>=l.top&&y<=l.bottom);
+  function textRow(point){
+    const [x,y]=point;
+    if(x<textBounds.left||x>textBounds.right||y<textBounds.top||y>textBounds.bottom)return -1;
+    return rowAt(y);
+  }
   function walk(from,to,visit){const steps=Math.max(1,Math.ceil(Math.hypot(to[0]-from[0],to[1]-from[1])/3));for(let i=0;i<=steps;i++)visit([from[0]+(to[0]-from[0])*i/steps,from[1]+(to[1]-from[1])*i/steps]);}
   function apply(selection,point,erase=false,radius=1.5){
     const key=hit(point),line=rowAt(point[1]);if(!key||line<0)return;
@@ -94,11 +105,39 @@ export function mountPageHighlighter({shell,viewport,stage,host,signal,initial=[
   function discard(){draft=null;pointer=null;lastPoint=null;render();}
   function setEnabled(value){finish();enabled=Boolean(value&&ready);if(enabled)mode='mark';down.clear();suppressClickUntil=0;toolbar.hidden=!enabled;viewport.classList.toggle('ink-enabled',enabled);toggle.setAttribute('aria-pressed',String(enabled));toggle.setAttribute('aria-label',enabled?'Matikan stabilo':'Aktifkan stabilo');toggle.title=enabled?'Matikan stabilo':'Stabilo';status.textContent=hint();viewport.setAttribute('aria-label',enabled?'Stabilo aktif. Seret bagian teks untuk menandai. Pilih Penghapus untuk menghapus sebagian sorotan. Matikan pensil untuk kembali membaca.':originalLabel);render();}
   function point(e){const r=stage.getBoundingClientRect();return [(e.clientX-r.left)/r.width*WIDTH,(e.clientY-r.top)/r.height*HEIGHT];}
-  function append(e){const p=point(e);walk(lastPoint||p,p,sample=>apply(draft,sample,mode==='erase',mode==='erase'?9:1.5));lastPoint=p;}
+  function append(e){
+    const p=point(e),row=textRow(p);
+    if(row<0||!hit(p)){lastPoint=null;return;}
+    const erase=mode==='erase',radius=erase?9:1.5;
+    if(lastPoint&&lastPoint.row!==row){
+      // Leave the previous row only once the finger reaches the new row,
+      // and never draw a connecting stroke through the gap.
+      const band=lines[row],inset=(band.bottom-band.top)*.15;
+      if(p[1]<band.top+inset||p[1]>band.bottom-inset)return;
+      lastPoint=null;
+    }
+    walk(lastPoint?.point||p,p,sample=>apply(draft,sample,erase,radius));
+    lastPoint={point:p,row};
+  }
   const stop=e=>{if(e.type==='click')e.preventDefault();e.stopImmediatePropagation();};
-  viewport.addEventListener('pointerdown',e=>{if(!enabled||!canDraw()||(e.pointerType==='mouse'&&e.button!==0))return;stop(e);down.add(e.pointerId);viewport.setPointerCapture(e.pointerId);if(down.size>1){discard();return;}pointer=e.pointerId;draft=clone(selected());lastPoint=null;append(e);render();},{capture:true,signal});
+  viewport.addEventListener('pointerdown',e=>{
+    if(!enabled||!canDraw()||(e.pointerType==='mouse'&&e.button!==0))return;
+    stop(e);down.add(e.pointerId);viewport.setPointerCapture(e.pointerId);
+    if(down.size>1){discard();return;}
+    const start=point(e);
+    if(textRow(start)<0||!hit(start))return;
+    pointer=e.pointerId;draft=clone(selected());lastPoint=null;append(e);render();
+  },{capture:true,signal});
   viewport.addEventListener('pointermove',e=>{if(!down.has(e.pointerId))return;stop(e);if(pointer!==e.pointerId||!draft)return;const samples=e.getCoalescedEvents?.();for(const sample of samples?.length?samples:[e])append(sample);render();},{capture:true,signal});
-  function end(e){if(!down.has(e.pointerId))return;stop(e);down.delete(e.pointerId);if(pointer===e.pointerId){if(e.type==='pointercancel')discard();else{append(e);finish();}}suppressClickUntil=Date.now()+500;}
+  function end(e){
+    if(!down.has(e.pointerId))return;
+    stop(e);down.delete(e.pointerId);
+    if(pointer===e.pointerId){
+      if(e.type==='pointercancel')discard();
+      else finish();
+    }
+    suppressClickUntil=Date.now()+500;
+  }
   viewport.addEventListener('pointerup',end,{capture:true,signal});viewport.addEventListener('pointercancel',end,{capture:true,signal});viewport.addEventListener('click',e=>{if(enabled||Date.now()<suppressClickUntil)stop(e);},{capture:true,signal});
   toggle.addEventListener('click',()=>setEnabled(!enabled),{signal});for(const button of tools)button.addEventListener('click',()=>{finish();mode=button.dataset.inkMode;status.textContent=hint();render();},{signal});
   undo.addEventListener('click',()=>{finish();const next=history.at(-1);if(!next)return;if(save(next)){marks=next;cachedSelection=null;history.pop();status.textContent='Tindakan terakhir diurungkan';render();}},{signal});
@@ -107,6 +146,15 @@ export function mountPageHighlighter({shell,viewport,stage,host,signal,initial=[
   toggle.disabled=true;render();
   return {setEnabled,async setReady(){
     try{const inverse=layer.getScreenCTM().inverse();let index=0;
+      // Keep the overlay inside the artwork even if imported hit regions
+      // or saved ranges extend into the title, footer, or paper frame.
+      const paper=stage.getBoundingClientRect(),artwork=host.getBoundingClientRect();
+      const left=(artwork.left-paper.left)/paper.width*WIDTH;
+      const right=(artwork.right-paper.left)/paper.width*WIDTH;
+      const top=(artwork.top-paper.top)/paper.height*HEIGHT;
+      const bottom=(artwork.bottom-paper.top)/paper.height*HEIGHT;
+      textBounds={left,right,top,bottom};
+      for(const [key,value] of Object.entries({x:left,y:top,width:right-left,height:bottom-top}))textRect.setAttribute(key,value);
       for(const node of host.querySelectorAll('.page-ayah')){const transform=inverse.multiply(node.getScreenCTM()),b=node.getBBox(),corners=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(p=>new DOMPoint(...p).matrixTransform(transform)),clipId='ink-verse-'+index++;
         regions.set(node.dataset.surah+':'+node.dataset.ayah,{node,transform,inverse:transform.inverse(),clipId,bounds:{left:Math.min(...corners.map(p=>p.x)),right:Math.max(...corners.map(p=>p.x)),top:Math.min(...corners.map(p=>p.y)),bottom:Math.max(...corners.map(p=>p.y))}});
         const clip=svg('clipPath'),path=svg('path');clip.id=clipId;path.setAttribute('d',node.getAttribute('d'));path.setAttribute('transform',matrixText(transform));clip.append(path);defs.append(clip);

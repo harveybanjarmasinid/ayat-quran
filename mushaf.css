@@ -21,7 +21,7 @@ body.page-clear .reader-playback-bar,body.page-clear .reader-navigation{display:
 .ink-toolbar [data-ink-mode=erase][aria-pressed=true]{background:#f6e6df;border-color:#c5a398;color:#6c4134}
 @media(max-width:300px){.ink-toolbar{padding-inline:10px;gap:3px}.ink-toolbar button{font-size:9px}}
 .mushaf-ink{position:absolute;inset:0;width:720px;height:1080px;pointer-events:none;mix-blend-mode:multiply;overflow:hidden}
-.mushaf-ink rect{fill:#efc43a;fill-opacity:.3;stroke:none}
+.mushaf-ink rect[data-ink-line]{fill:#efc43a;fill-opacity:.3;stroke:none}
 .mushaf-viewport.ink-enabled{cursor:crosshair}
 .mushaf-viewport.ink-erase{cursor:cell}
 .mushaf-viewport.ink-enabled .page-ayah.selected{fill-opacity:0}
